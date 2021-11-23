@@ -75,9 +75,7 @@ class WeirdNetwork():
             for jdx in self.backfeed_indices[idx]:
                 if jdx not in to_traverse:
                     to_traverse.append(jdx)
-        for idx, node in enumerate(self.nodes):
-            if idx in backfeed:
-                node.update(backfeed[idx][0], backfeed[idx][1])
+        return backfeed
 
     def train(self, input_with_labels, test_set_size=0.1):
         ### uses SGD: batch size = 1
@@ -88,8 +86,13 @@ class WeirdNetwork():
         test_set = np.choice(input_with_labels, round(test_set_size*len(input_with_labels)))
 
         #backprop
+        #TODO: adapt to use a batch size
         for x, y in input_with_labels:
-            self.backpropagate(x, y)
+            backfeed = self.backpropagate(x, y)
+            #update
+            for idx, node in enumerate(self.nodes):
+                if idx in backfeed:
+                    node.update(backfeed[idx][0], backfeed[idx][1])
 
         #evaluate
         return sum([self.cost(self.predict(x),y) for x,y in test_set])
