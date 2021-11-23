@@ -21,7 +21,7 @@ class WeirdNetwork():
             self.backfeed_indices[idx] = [edge[0] for edge in edges if edge[1]==idx]
             self.nodes.append(Node(param['x'], param['y'], param['activation']))
             if param.get('output', False):
-                self.output = idx
+                self.output_node = idx
             if param.get('input', False):
                 self.input_indices.append(idx)
         self.edges = edges
@@ -33,19 +33,25 @@ class WeirdNetwork():
         outputs = {}
         to_traverse = []
         for idx in self.input_indices:
+            print(f"feeding input node {idx}...")
             outputs[idx] = self.nodes[idx].feed(input)
             to_traverse.extend(self.feed_indices[idx])
+        print(f"initial propogation targets: {to_traverse}")
         for idx in to_traverse:
             if idx not in outputs:
                 #find outputs this node wants as input
-                inputs = [outputs[i] for i in self.backfeed_indices if i in outputs]
+                inputs = [outputs[i] for i in self.backfeed_indices[idx] if i in outputs]
+                print(f"feeding node {idx} with outputs from: {[i for i in self.backfeed_indices[idx] if i in outputs]}")
+                #TODO: ask nodes for past output instead of assuming 0
                 #synapse them together
                 #TODO: synapse function goes here
                 this_input = sum(inputs)
                 #feed
                 outputs[idx] = self.nodes[idx].feed(this_input)
+                to_traverse.extend([fidx for fidx in self.feed_indices[idx] if fidx not in outputs])
         if self.output_node in outputs:
             #TODO: decision function goes here
+            print(f"taking output from output node {self.output_node}")
             return outputs[self.output_node]
         raise Exception("Output node is not fed")
 
@@ -100,16 +106,23 @@ if __name__=="__main__":
         },
         {
             'x':5,
+            'y':5,
+            'activation': 'sigmoid',
+        },
+        {
+            'x':5,
             'y':1,
             'activation': 'sigmoid',
             'output':True
         }
     ]
     edges = [
-        (0,1)
+        (0,1),
+        (1,2)
     ]
     n = WeirdNetwork(node_params, edges)
-    print(n)
+    i = np.random.randn(5, 5)
+    print(n.predict(i))
 
 
 

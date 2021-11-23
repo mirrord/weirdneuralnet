@@ -15,7 +15,7 @@ class Node():
         # add linear synapsing
         # add normalization
         self.input = input
-        self.z = np.dot(input, self.weight) + self.bias
+        self.z = np.dot(self.weight, input) + self.bias
         self.output = self.activate(self.z)
         return self.output
 
