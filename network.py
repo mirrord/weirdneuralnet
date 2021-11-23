@@ -6,7 +6,7 @@ import numpy as np
 
 
 class WeirdNetwork():
-    def __init__(self, node_params, edges, error_cost_func="diff_squares"):
+    def __init__(self, node_params, edges, error_cost_func="diff_squares", learning_rate=0.001):
         # node_params should be a list of dicts of node parameters
         # edges should be a list of node index tuples denoting connections between nodes
         self.nodes = []
@@ -14,6 +14,7 @@ class WeirdNetwork():
         self.feed_indices = {}
         self.backfeed_indices = {}
         self.output_node = 0
+        self.learning_rate = learning_rate
         self.input, self.output = None, None
         self.cost, self.cost_deriv = COSTS.get(error_cost_func, (diff_squares, ddiff_squares))
         for idx, param in enumerate(node_params):
@@ -77,13 +78,13 @@ class WeirdNetwork():
                     to_traverse.append(jdx)
         return backfeed
 
-    def train(self, input_with_labels, test_set_size=0.1):
+    def _evaluate(self, eval_set):
+        return sum([self.cost(self.predict(x),y) for x,y in eval_set])
+
+    def train(self, input_with_labels):
         ### uses SGD: batch size = 1
         #randomize input set
-        np.shuffle(input_with_labels)
-
-        #randomly select test examples
-        test_set = np.choice(input_with_labels, round(test_set_size*len(input_with_labels)))
+        np.random.shuffle(input_with_labels)
 
         #backprop
         #TODO: adapt to use a batch size
@@ -92,40 +93,13 @@ class WeirdNetwork():
             #update
             for idx, node in enumerate(self.nodes):
                 if idx in backfeed:
-                    node.update(backfeed[idx][0], backfeed[idx][1])
+                    node.update(self.learning_rate*backfeed[idx][0], self.learning_rate*backfeed[idx][1])
 
-        #evaluate
-        return sum([self.cost(self.predict(x),y) for x,y in test_set])
-
+        return
 
 
-if __name__=="__main__":
-    node_params =[
-        {
-            'x':5,
-            'y':5,
-            'activation': 'sigmoid',
-            'input':True
-        },
-        {
-            'x':5,
-            'y':5,
-            'activation': 'sigmoid',
-        },
-        {
-            'x':5,
-            'y':1,
-            'activation': 'sigmoid',
-            'output':True
-        }
-    ]
-    edges = [
-        (0,1),
-        (1,2)
-    ]
-    n = WeirdNetwork(node_params, edges)
-    i = np.random.randn(5, 5)
-    print(n.predict(i))
+
+
 
 
 
