@@ -34,15 +34,15 @@ class WeirdNetwork():
         outputs = {}
         to_traverse = []
         for idx in self.input_indices:
-            print(f"feeding input node {idx}...")
+            #print(f"feeding input node {idx}...")
             outputs[idx] = self.nodes[idx].feed(input)
             to_traverse.extend(self.feed_indices[idx])
-        print(f"initial propogation targets: {to_traverse}")
+        #print(f"initial propogation targets: {to_traverse}")
         for idx in to_traverse:
             if idx not in outputs:
                 #find outputs this node wants as input
                 inputs = [outputs[i] for i in self.backfeed_indices[idx] if i in outputs]
-                print(f"feeding node {idx} with outputs from: {[i for i in self.backfeed_indices[idx] if i in outputs]}")
+                #print(f"feeding node {idx} with outputs from: {[i for i in self.backfeed_indices[idx] if i in outputs]}")
                 #TODO: ask nodes for past output instead of assuming 0
                 #synapse them together
                 #TODO: synapse function goes here
@@ -52,7 +52,7 @@ class WeirdNetwork():
                 to_traverse.extend([fidx for fidx in self.feed_indices[idx] if fidx not in outputs])
         if self.output_node in outputs:
             #TODO: decision function goes here
-            print(f"taking output from output node {self.output_node}")
+            #print(f"taking output from output node {self.output_node}")
             return outputs[self.output_node]
         raise Exception("Output node is not fed")
 
@@ -62,7 +62,7 @@ class WeirdNetwork():
         backfeed = {}
         error_delta = self.cost_deriv(predicted_output, exp_output)
         backfeed[self.output_node] = self.nodes[self.output_node].backfeed(error_delta)
-        to_traverse = [].extend(self.backfeed_indices[self.output_node])
+        to_traverse = self.backfeed_indices.get(self.output_node, [])
         for idx in to_traverse:
             error_signal_components = [backfeed.get(oidx, (0,0,0)) for oidx in self.feed_indices[idx]]
             de = sum([i[2] for i in error_signal_components]) #I think this actually requires a derivative of the synapse func

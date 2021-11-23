@@ -33,23 +33,34 @@ def run_test(epochs):
 
     X_train,X_val=X[train_no,:,:],X[val_no,:,:]
     Y_train,Y_val=Y[train_no],Y[val_no]
-    training_data = zip(X_train, Y_train)
+    #reshape
+    X_train = X_train.reshape((-1,28*28))
+    X_val = X_val.reshape((-1,28*28))
+    def binarize(y):
+        targets = np.zeros((len(y),10), np.float32)
+        targets[range(targets.shape[0]),y] = 1
+        return targets
+    Y_train, Y_val = binarize(Y_train), binarize(Y_val)
+
+    training_data = list(zip(X_train, Y_train))
+
+    print(X_train.shape)
 
     #build network
     node_params =[
         {
-            'x':28,
-            'y':28,
+            'x':28*28,
+            'y':128,
             'activation': 'sigmoid',
             'input':True
         },
         {
-            'x':28,
-            'y':9,
+            'x':128,
+            'y':10,
             'activation': 'sigmoid',
         },
         {
-            'x':9,
+            'x':10,
             'y':1,
             'activation': 'sigmoid',
             'output':True
@@ -66,10 +77,10 @@ def run_test(epochs):
         print(f"epoch: {i}...")
 
         if i%5==0:
-            cost = model._evaluate(zip(X_test, Y_test))
+            cost = model._evaluate(list(zip(X_test, Y_test)))
             print(f"\tcost: {cost}")
 
-    final_error = model._evaluate(zip(X_val, Y_val))
+    final_error = model._evaluate(list(zip(X_val, Y_val)))
     print(f"validation: {final_error}")
         
 
