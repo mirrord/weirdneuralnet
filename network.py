@@ -33,6 +33,7 @@ class WeirdNetwork():
     def predict(self, input):
         outputs = {}
         to_traverse = []
+        #print(f"predicting... {input.shape}")
         for idx in self.input_indices:
             #print(f"feeding input node {idx}...")
             outputs[idx] = self.nodes[idx].feed(input)
@@ -53,14 +54,17 @@ class WeirdNetwork():
         if self.output_node in outputs:
             #TODO: decision function goes here
             #print(f"taking output from output node {self.output_node}")
+            #print(f"prediction output: {outputs[self.output_node].shape}")
             return outputs[self.output_node]
         raise Exception("Output node is not fed")
 
     ##TODO: backprop, train, minibatch train, etc
     def backpropagate(self, input, exp_output):
-        predicted_output = self.predict(input)
+        predicted_output = self.predict(input.reshape((784,1)))
+        #print(f"output: {predicted_output.shape}")
         backfeed = {}
         error_delta = self.cost_deriv(predicted_output, exp_output)
+        #print(f"dE {error_delta.shape} = dC({predicted_output.shape}, {exp_output.shape} )")
         backfeed[self.output_node] = self.nodes[self.output_node].backfeed(error_delta)
         to_traverse = self.backfeed_indices.get(self.output_node, [])
         for idx in to_traverse:
@@ -79,7 +83,8 @@ class WeirdNetwork():
         return backfeed
 
     def _evaluate(self, eval_set):
-        return sum([self.cost(self.predict(x),y) for x,y in eval_set])
+        #!TODO: vectorize
+        return sum([self.cost(self.predict(x.reshape((784,1))),y.reshape((10,1))) for x,y in eval_set])
 
     def train(self, input_with_labels):
         ### uses SGD: batch size = 1
@@ -88,8 +93,9 @@ class WeirdNetwork():
 
         #backprop
         #TODO: adapt to use a batch size
+        #!TODO: vectorize you idiot
         for x, y in input_with_labels:
-            backfeed = self.backpropagate(x, y)
+            backfeed = self.backpropagate(x, y.reshape((10,1)))
             #update
             for idx, node in enumerate(self.nodes):
                 if idx in backfeed:

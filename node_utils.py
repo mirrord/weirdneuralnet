@@ -15,7 +15,8 @@ ACTIVATIONS ={
 
 ## cost functions
 def diff_squares(y, y_true):
-    return np.square(y-y_true)
+    #print(f"diff squares of: {y.shape} - {y_true.shape}")
+    return sum(np.square(y)-np.square(y_true))
 def ddiff_squares(y, y_true):
     return 2*(y-y_true)
 

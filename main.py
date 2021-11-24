@@ -40,11 +40,11 @@ def run_test(epochs):
         targets = np.zeros((len(y),10), np.float32)
         targets[range(targets.shape[0]),y] = 1
         return targets
-    Y_train, Y_val = binarize(Y_train), binarize(Y_val)
+    Y_train, Y_val, Y_test = binarize(Y_train), binarize(Y_val), binarize(Y_test)
 
     training_data = list(zip(X_train, Y_train))
 
-    print(X_train.shape)
+    #print(X_train.shape)
 
     #build network
     node_params =[
@@ -56,12 +56,12 @@ def run_test(epochs):
         },
         {
             'x':128,
-            'y':10,
+            'y':128,
             'activation': 'sigmoid',
         },
         {
-            'x':10,
-            'y':1,
+            'x':128,
+            'y':10,
             'activation': 'sigmoid',
             'output':True
         }
@@ -71,10 +71,13 @@ def run_test(epochs):
         (1,2)
     ]
     model = WeirdNetwork(node_params, edges)
+    #print(f"calculating eval({X_test.shape}, {Y_test.shape})")
+    cost = model._evaluate(list(zip(X_test, Y_test)))
+    #print(f"{cost.shape} = eval({X_test.shape}, {Y_test.shape})")
 
     for i in range(epochs):
-        model.train(training_data)
         print(f"epoch: {i}...")
+        model.train(training_data)
 
         if i%5==0:
             cost = model._evaluate(list(zip(X_test, Y_test)))
