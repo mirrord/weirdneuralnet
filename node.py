@@ -27,6 +27,7 @@ class Node():
         #print(f"calculating: bias {delta_bias.shape} . input.T {self.input.T.shape}")
         delta_weight = np.dot(delta_bias, self.input.T)
         #print(f"delta weight: {delta_weight.shape} vs my weight: {self.weight.shape}")
+        #print(f"db: {delta_bias.shape}, dw: {delta_weight.shape}")
         return delta_bias, delta_weight, np.dot(self.weight.T, delta_bias) #last is de_dz for next layer down
 
     def update(self, delta_bias, delta_weight):

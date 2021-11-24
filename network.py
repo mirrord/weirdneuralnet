@@ -6,7 +6,7 @@ import numpy as np
 
 
 class WeirdNetwork():
-    def __init__(self, node_params, edges, error_cost_func="diff_squares", learning_rate=0.001):
+    def __init__(self, node_params, edges, error_cost_func="diff_squares", learning_rate=0.01):
         # node_params should be a list of dicts of node parameters
         # edges should be a list of node index tuples denoting connections between nodes
         self.nodes = []
@@ -60,11 +60,12 @@ class WeirdNetwork():
 
     ##TODO: backprop, train, minibatch train, etc
     def backpropagate(self, input, exp_output):
-        predicted_output = self.predict(input.reshape((784,1)))
+        num_sample = input.shape[1]
+        predicted_output = self.predict(input)
         #print(f"output: {predicted_output.shape}")
         backfeed = {}
         error_delta = self.cost_deriv(predicted_output, exp_output)
-        #print(f"dE {error_delta.shape} = dC({predicted_output.shape}, {exp_output.shape} )")
+        #print(f"dE {error_delta.shape} = dC( {predicted_output.shape}, {exp_output.shape} )")
         backfeed[self.output_node] = self.nodes[self.output_node].backfeed(error_delta)
         to_traverse = self.backfeed_indices.get(self.output_node, [])
         for idx in to_traverse:
@@ -80,26 +81,30 @@ class WeirdNetwork():
             for jdx in self.backfeed_indices[idx]:
                 if jdx not in to_traverse:
                     to_traverse.append(jdx)
-        return backfeed
+        #take average of gradients
+        bup = {i:np.sum(b[0],1,keepdims=True)/num_sample for i,b in backfeed.items()}
+        wup = {i:w[1]/num_sample for i,w in backfeed.items()}
+        # print([b.shape for b,_,_ in backfeed.values()])
+        # print([w.shape for _,w,_ in backfeed.values()])
+        # print([b.shape for b in bup.values()])
+        # print([w.shape for w in wup.values()])
+        return bup, wup
 
-    def _evaluate(self, eval_set):
+    def _evaluate(self, input, exp_out):
         #!TODO: vectorize
-        return sum([self.cost(self.predict(x.reshape((784,1))),y.reshape((10,1))) for x,y in eval_set])
+        return sum(self.cost(self.predict(input),exp_out))
 
-    def train(self, input_with_labels):
+    def train(self, input, exp_output):
         ### uses SGD: batch size = 1
-        #randomize input set
-        np.random.shuffle(input_with_labels)
-
         #backprop
         #TODO: adapt to use a batch size
         #!TODO: vectorize you idiot
-        for x, y in input_with_labels:
-            backfeed = self.backpropagate(x, y.reshape((10,1)))
-            #update
-            for idx, node in enumerate(self.nodes):
-                if idx in backfeed:
-                    node.update(self.learning_rate*backfeed[idx][0], self.learning_rate*backfeed[idx][1])
+        #for x, y in input_with_labels:
+        bup, wup = self.backpropagate(input, exp_output)
+        #update
+        for idx, node in enumerate(self.nodes):
+            if idx in wup:
+                node.update(self.learning_rate*bup[idx], self.learning_rate*wup[idx])
 
         return
 

@@ -5,6 +5,8 @@ from network import WeirdNetwork
 import os
 import hashlib, requests, gzip
 
+import matplotlib.pyplot as plt
+
 def run_test(epochs):
     #fetch data
     path='./datasets/'
@@ -21,7 +23,7 @@ def run_test(epochs):
 
     X = fetch("http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz")[0x10:].reshape((-1, 28, 28))
     Y = fetch("http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz")[8:]
-    X_test = fetch("http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz")[0x10:].reshape((-1, 28*28))
+    X_test = fetch("http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz")[0x10:].reshape((-1, 28*28)).T
     Y_test = fetch("http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz")[8:]
 
     #Validation split
@@ -34,17 +36,13 @@ def run_test(epochs):
     X_train,X_val=X[train_no,:,:],X[val_no,:,:]
     Y_train,Y_val=Y[train_no],Y[val_no]
     #reshape
-    X_train = X_train.reshape((-1,28*28))
-    X_val = X_val.reshape((-1,28*28))
+    X_train = X_train.reshape((-1,28*28)).T
+    X_val = X_val.reshape((-1,28*28)).T
     def binarize(y):
         targets = np.zeros((len(y),10), np.float32)
         targets[range(targets.shape[0]),y] = 1
         return targets
-    Y_train, Y_val, Y_test = binarize(Y_train), binarize(Y_val), binarize(Y_test)
-
-    training_data = list(zip(X_train, Y_train))
-
-    #print(X_train.shape)
+    Y_train, Y_val, Y_test = binarize(Y_train).T, binarize(Y_val).T, binarize(Y_test).T
 
     #build network
     node_params =[
@@ -72,21 +70,27 @@ def run_test(epochs):
     ]
     model = WeirdNetwork(node_params, edges)
     #print(f"calculating eval({X_test.shape}, {Y_test.shape})")
-    cost = model._evaluate(list(zip(X_test, Y_test)))
+    #cost = model._evaluate(list(zip(X_test, Y_test)))
+
     #print(f"{cost.shape} = eval({X_test.shape}, {Y_test.shape})")
+
+    costs = []
+    epoch_vals = []
 
     for i in range(epochs):
         print(f"epoch: {i}...")
-        model.train(training_data)
+        model.train(X_train, Y_train)
 
         if i%5==0:
-            cost = model._evaluate(list(zip(X_test, Y_test)))
-            print(f"\tcost: {cost}")
+            costs.append(model._evaluate(X_test, Y_test))
+            epoch_vals.append(i)
 
-    final_error = model._evaluate(list(zip(X_val, Y_val)))
+    final_error = model._evaluate(X_val, Y_val)
     print(f"validation: {final_error}")
+    plt.plot(epoch_vals, costs)
+    plt.show()
         
 
 
 if __name__=="__main__":
-    run_test(10)
+    run_test(100)
