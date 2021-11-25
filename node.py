@@ -1,3 +1,4 @@
+
 import numpy as np
 from node_utils import *
 
@@ -9,6 +10,14 @@ class Node():
         self.output = None
         self.input = None
         self.z = None
+
+    def clear_history(self):
+        self.output = None
+        self.input = None
+        self.z = None
+
+    def shape(self):
+        return self.weight.shape
 
     def feed(self, input):
         #TODO:

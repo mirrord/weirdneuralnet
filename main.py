@@ -7,9 +7,7 @@ import hashlib, requests, gzip
 
 import matplotlib.pyplot as plt
 
-def run_test(epochs):
-    #fetch data
-    path='./datasets/'
+def get_dataset(path):
     def fetch(url):
         fp = os.path.join(path, hashlib.md5(url.encode('utf-8')).hexdigest())
         if os.path.isfile(fp):
@@ -43,6 +41,12 @@ def run_test(epochs):
         targets[range(targets.shape[0]),y] = 1
         return targets
     Y_train, Y_val, Y_test = binarize(Y_train).T, binarize(Y_val).T, binarize(Y_test).T
+    return X_train, Y_train, X_test, Y_test, X_val, Y_val
+
+
+def run_test(epochs):
+    #fetch data
+    X_train, Y_train, X_test, Y_test, X_val, Y_val = get_dataset('./datasets/')
 
     #build network
     node_params =[
@@ -70,7 +74,7 @@ def run_test(epochs):
     ]
     model = WeirdNetwork(node_params, edges)
     #print(f"calculating eval({X_test.shape}, {Y_test.shape})")
-    #cost = model._evaluate(list(zip(X_test, Y_test)))
+    #cost = model.evaluate(list(zip(X_test, Y_test)))
 
     #print(f"{cost.shape} = eval({X_test.shape}, {Y_test.shape})")
 
@@ -82,15 +86,29 @@ def run_test(epochs):
         model.train(X_train, Y_train)
 
         if i%5==0:
-            costs.append(model._evaluate(X_test, Y_test))
+            costs.append(model.evaluate(X_test, Y_test))
             epoch_vals.append(i)
 
-    final_error = model._evaluate(X_val, Y_val)
+    costs.append(model.evaluate(X_test, Y_test))
+    epoch_vals.append(i)
+    print(f"final cost: {costs[-1]}")
+    final_error = model.evaluate(X_val, Y_val)
     print(f"validation: {final_error}")
     plt.plot(epoch_vals, costs)
     plt.show()
+    model.save("my_model.wn")
+    return model
         
+
+def load_test(fname):
+    X_train, Y_train, X_test, Y_test, X_val, Y_val = get_dataset('./datasets/')
+    model = WeirdNetwork.load(fname)
+    final_error = model.evaluate(X_test, Y_test)
+    print(f"cost: {final_error}")
+    return model
 
 
 if __name__=="__main__":
-    run_test(100)
+    model = run_test(10)
+    load_model = load_test("my_model.wn")
+    

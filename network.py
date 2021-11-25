@@ -4,6 +4,8 @@ from node import Node
 from node_utils import *
 import numpy as np
 
+from pickle import Pickler, Unpickler
+
 
 class WeirdNetwork():
     def __init__(self, node_params, edges, error_cost_func="diff_squares", learning_rate=0.01):
@@ -29,6 +31,21 @@ class WeirdNetwork():
 
     def __str__(self):
         return f"<WeirdNetwork size={len(self.nodes)} nodes>"
+
+    #TODO: this is insecure and doesn't really work.
+    #   implement a weirdnet-specific load & save.
+    @classmethod
+    def load(cls, fname):
+        with open(fname, 'rb') as f:
+            u = Unpickler(f)
+            return u.load()
+
+    def save(self, fname, keep_history=False):
+        for node in self.nodes:
+            node.clear_history()
+        with open(fname, 'wb') as f:
+            p = Pickler(f)
+            return p.dump(self)
 
     def predict(self, input):
         outputs = {}
@@ -90,7 +107,7 @@ class WeirdNetwork():
         # print([w.shape for w in wup.values()])
         return bup, wup
 
-    def _evaluate(self, input, exp_out):
+    def evaluate(self, input, exp_out):
         #!TODO: vectorize
         return sum(self.cost(self.predict(input),exp_out))
 
