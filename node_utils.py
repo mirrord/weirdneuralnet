@@ -32,4 +32,42 @@ COSTS = {
 ## normalization functions
 
 
+## reference functions
+def classic_net_predict(weights, biases, input):
+    for b, w in zip(biases, weights):
+        # print(f"calculating: {w.shape} . {input.shape}")
+        # print(f"weight: {w}\n")
+        # print(f"input: {input}\n")
+        input = sigmoid(np.dot(w, input)+b)
+        # print(f"\t=> {input.shape}")
+        # print(f"output: {input}")
+    return input
 
+def classic_net_backprop(weights, biases, input, exp_out):
+    #forward prop while recording
+    activations = [input] # list to store all the activations, layer by layer
+    zs = [] # list to store all the z vectors, layer by layer
+    for b, w in zip(biases, weights):
+        zs.append(np.dot(w, activations[-1])+b)
+        activations.append(sigmoid(zs[-1]))
+
+    #error calc
+    delta = ddiff_squares(activations[-1], exp_out)
+    # print(f"\ndE = {delta.shape}")
+
+    #gradient calc
+    # print(f"first de[-1] = {delta.shape} * dsig")
+    delta = delta * dsigmoid(zs[-1])
+    # print(f"\t=> {delta.shape}")
+    nabla_b = [np.zeros(b.shape) for b in biases]
+    nabla_w = [np.zeros(w.shape) for w in weights]
+    nabla_b[-1] = delta
+    # print(f"first weight = de {delta.shape} . {activations[-2].T.shape}")
+    nabla_w[-1] = np.dot(delta, activations[-2].T)
+    for l in range(2, len(weights)+1):
+        nabla_b[-l] = np.dot(weights[-l+1].T, nabla_b[-l+1]) * dsigmoid(zs[-l])
+        # print(f"db[{-l}] {nabla_b[-l].shape} = (weight.T {weights[-l+1].T.shape} . de {nabla_b[-l+1].shape}) * dsig")
+        nabla_w[-l] = np.dot(nabla_b[-l], activations[-l-1].T)
+        # print(f"dw[{-l}] {nabla_w[-l].shape} = db {nabla_b[-l].shape} . output[{2-l-1}] {activations[-l-1].T.shape})")
+    # print(nabla_w[0])
+    return (nabla_b, nabla_w)

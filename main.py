@@ -1,6 +1,7 @@
 
 import numpy as np
 from network import WeirdNetwork
+import node_utils
 
 import os
 import hashlib, requests, gzip
@@ -107,8 +108,23 @@ def load_test(fname):
     print(f"cost: {final_error}")
     return model
 
+def equivalence_test(fname):
+    X_train, Y_train, X_test, Y_test, X_val, Y_val = get_dataset('./datasets/')
+    model = WeirdNetwork.load(fname)
+    weights, biases = model.compile()
+    model_prediction = model.predict(X_train)
+    classic_prediction = node_utils.classic_net_predict(weights, biases, X_train)
+    print('####################################')
+    assert(np.array_equal(model_prediction, classic_prediction))
+    #print(f"model output ({model_prediction.shape}): {model_prediction}")
+    #print(f"classic output ({classic_prediction.shape}): {classic_prediction}")
+
+    model_error = model.backpropagate(X_train, Y_train)
+    classic_error = node_utils.classic_net_backprop(weights, biases, X_train, Y_train)
+    print(f"model error: {[(i, m.shape) for i,m in model_error[0].items()]}, {[(i,m.shape) for i,m in model_error[1].items()]}")
+    print(f"class error: {[m.shape for m in classic_error[0]]}, {[m.shape for m in classic_error[1]]}")
 
 if __name__=="__main__":
-    model = run_test(10)
+    #model = run_test(100)
     load_model = load_test("my_model.wn")
-    
+    #equivalence_test("my_model.wn")

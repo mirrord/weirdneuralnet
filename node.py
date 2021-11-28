@@ -26,7 +26,10 @@ class Node():
         self.input = input
         self.z = np.dot(self.weight, input) + self.bias
         self.output = self.activate(self.z)
-        #print(f"δ({self.weight.shape} . {input.shape} + {self.bias.shape}) = {self.output.shape}")
+        # print(f"δ({self.weight.shape} . {input.shape} + {self.bias.shape}) = {self.output.shape}")
+        # print(f"weight: {self.weight}\n")
+        # print(f"input: {input}\n")
+        # print(f"output: {self.output}\n")
         return self.output
 
     def backfeed(self, de_dz_foward):
