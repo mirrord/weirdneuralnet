@@ -43,8 +43,9 @@ class WeirdNetwork():
             return u.load()
 
     def save(self, fname, keep_history=False):
-        for node in self.nodes:
-            node.clear_history()
+        if not keep_history:
+            for node in self.nodes:
+                node.clear_history()
         with open(fname, 'wb') as f:
             p = Pickler(f)
             return p.dump(self)
@@ -83,11 +84,9 @@ class WeirdNetwork():
                 #synapse them together
                 #TODO: synapse function goes here
                 this_input = sum(inputs)
-                #feed
                 outputs[idx] = self.nodes[idx].feed(this_input)
                 to_traverse.extend([fidx for fidx in self.feed_indices[idx] if fidx not in outputs])
         if self.output_node in outputs:
-            #TODO: decision function goes here
             #print(f"taking output from output node {self.output_node}")
             #print(f"prediction output: {outputs[self.output_node].shape}")
             return outputs[self.output_node]

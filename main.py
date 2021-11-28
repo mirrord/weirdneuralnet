@@ -76,7 +76,6 @@ def run_test(epochs):
     model = WeirdNetwork(node_params, edges)
     #print(f"calculating eval({X_test.shape}, {Y_test.shape})")
     #cost = model.evaluate(list(zip(X_test, Y_test)))
-
     #print(f"{cost.shape} = eval({X_test.shape}, {Y_test.shape})")
 
     costs = []
