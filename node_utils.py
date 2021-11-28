@@ -1,7 +1,14 @@
-import numpy as np
+
+#import numpy as np
+import cupy as np
 
 ## activation functions
-from scipy.special import expit as sigmoid
+#from scipy.special import expit as sigmoid
+sigmoid = np.ElementwiseKernel(
+        'float64 x',
+        'float64 y',
+        'y = 1 / (1 + exp(-x))',
+        'expit')
 def dsigmoid(x):
     sig = sigmoid(x)
     return sig*(1-sig)
@@ -16,7 +23,7 @@ ACTIVATIONS ={
 ## cost functions
 def diff_squares(y, y_true):
     #print(f"diff squares of: {y.shape} - {y_true.shape}")
-    return sum(np.square(y-y_true))
+    return np.sum(np.square(y-y_true))
 def ddiff_squares(y, y_true):
     return 2*(y-y_true)
 

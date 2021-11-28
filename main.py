@@ -1,5 +1,8 @@
 
-import numpy as np
+#import numpy as np
+import cupy as np
+from numpy import frombuffer, setdiff1d
+
 from network import WeirdNetwork
 import node_utils
 
@@ -18,7 +21,8 @@ def get_dataset(path):
             with open(fp, "wb") as f:
                 data = requests.get(url).content
                 f.write(data)
-        return np.frombuffer(gzip.decompress(data), dtype=np.uint8).copy()
+        #return np.frombuffer(gzip.decompress(data), dtype=np.uint8).copy())
+        return np.array(frombuffer(gzip.decompress(data), dtype=np.uint8).copy())
 
     X = fetch("http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz")[0x10:].reshape((-1, 28, 28))
     Y = fetch("http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz")[8:]
@@ -30,16 +34,22 @@ def get_dataset(path):
     np.random.shuffle(rand)
     train_no=rand[:50000]
 
-    val_no=np.setdiff1d(rand,train_no)
+    #val_no=np.setdiff1d(rand,train_no)
+    val_no=np.array(setdiff1d(np.asnumpy(rand),np.asnumpy(train_no)))
 
     X_train,X_val=X[train_no,:,:],X[val_no,:,:]
     Y_train,Y_val=Y[train_no],Y[val_no]
     #reshape
     X_train = X_train.reshape((-1,28*28)).T
     X_val = X_val.reshape((-1,28*28)).T
+    # def binarize(y):
+    #     targets = np.zeros((len(y),10), np.float32)
+    #     targets[range(targets.shape[0]),y] = 1
+    #     return targets
     def binarize(y):
         targets = np.zeros((len(y),10), np.float32)
-        targets[range(targets.shape[0]),y] = 1
+        for i in range(targets.shape[0]):
+            targets[i][y[i]] = 1
         return targets
     Y_train, Y_val, Y_test = binarize(Y_train).T, binarize(Y_val).T, binarize(Y_test).T
     return X_train, Y_train, X_test, Y_test, X_val, Y_val
@@ -83,18 +93,19 @@ def run_test(epochs):
 
     for i in range(epochs):
         print(f"epoch: {i}...")
-        model.train(X_train, Y_train)
+        costs.append(model.train(X_train, Y_train))
 
-        if i%5==0:
-            costs.append(model.evaluate(X_test, Y_test))
-            epoch_vals.append(i)
+        # if i%5==0:
+        #     costs.append(model.evaluate(X_test, Y_test))
+        #     epoch_vals.append(i)
 
-    costs.append(model.evaluate(X_test, Y_test))
-    epoch_vals.append(i)
-    print(f"final cost: {costs[-1]}")
-    final_error = model.evaluate(X_val, Y_val)
-    print(f"validation: {final_error}")
-    plt.plot(epoch_vals, costs)
+    #costs.append(model.evaluate(X_test, Y_test))
+    #epoch_vals.append(i)
+    print(f"test error: {model.evaluate(X_test, Y_test)}")
+    # final_error = model.evaluate(X_val, Y_val)
+    # print(f"validation: {final_error}")
+    #plt.plot(epoch_vals, costs)
+    plt.plot(list(range(epochs)), costs)
     plt.show()
     model.save("my_model.wn")
     return model
@@ -124,6 +135,6 @@ def equivalence_test(fname):
     print(f"class error: {[m.shape for m in classic_error[0]]}, {[m.shape for m in classic_error[1]]}")
 
 if __name__=="__main__":
-    #model = run_test(100)
-    load_model = load_test("my_model.wn")
+    model = run_test(100)
+    #load_model = load_test("my_model.wn")
     #equivalence_test("my_model.wn")

@@ -2,7 +2,8 @@
 
 from node import Node
 from node_utils import *
-import numpy as np
+#import numpy as np
+import cupy as np
 
 from pickle import Pickler, Unpickler
 
@@ -122,25 +123,22 @@ class WeirdNetwork():
 
         bup = {i:np.sum(b[0],1,keepdims=True)/num_sample for i,b in backfeed.items()}
         wup = {i:w[1]/num_sample for i,w in backfeed.items()}
-        return bup, wup
+        return bup, wup, self.cost(predicted_output, exp_output)
 
     def evaluate(self, input, exp_out):
-        #!TODO: vectorize
-        return sum(self.cost(self.predict(input),exp_out))
+        return self.cost(self.predict(input),exp_out)
 
     def train(self, input, exp_output):
-        ### uses SGD: batch size = 1
         #backprop
         #TODO: adapt to use a batch size
-        #!TODO: vectorize you idiot
         #for x, y in input_with_labels:
-        bup, wup = self.backpropagate(input, exp_output)
+        bup, wup, cost = self.backpropagate(input, exp_output)
         #update
         for idx, node in enumerate(self.nodes):
             if idx in wup:
                 node.update(self.learning_rate*bup[idx], self.learning_rate*wup[idx])
 
-        return
+        return cost
 
 
 
