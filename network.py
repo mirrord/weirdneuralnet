@@ -41,7 +41,10 @@ class WeirdNetwork():
     def load(cls, fname):
         with open(fname, 'rb') as f:
             u = Unpickler(f)
-            return u.load()
+            model = u.load()
+        for node in model.nodes:
+            node.reload()
+        return model
 
     def save(self, fname, keep_history=False):
         if not keep_history:
@@ -65,17 +68,17 @@ class WeirdNetwork():
             return weights, biases
         raise Exception("Output node is not fed")
 
-    def predict(self, input):
+    def predict(self, input, debinarize=False):
         outputs = {}
         to_traverse = []
         #print(f"feed idxs: {self.feed_indices}")
         #print(f"backfeed idxs: {self.backfeed_indices}")
-        #print(f"predicting... {input.shape}")
+        # print(f"predicting... {input.shape}")
         for idx in self.input_indices:
-            #print(f"feeding input node {idx}...")
+            # print(f"feeding input node {idx}...")
             outputs[idx] = self.nodes[idx].feed(input)
             to_traverse.extend(self.feed_indices[idx])
-        #print(f"initial propogation targets: {to_traverse}")
+        # print(f"initial propogation targets: {to_traverse}")
         for idx in to_traverse:
             if idx not in outputs:
                 #find outputs this node wants as input
@@ -90,6 +93,8 @@ class WeirdNetwork():
         if self.output_node in outputs:
             #print(f"taking output from output node {self.output_node}")
             #print(f"prediction output: {outputs[self.output_node].shape}")
+            if debinarize:
+                return outputs[self.output_node].argmax(axis=1)
             return outputs[self.output_node]
         raise Exception("Output node is not fed")
 

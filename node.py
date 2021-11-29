@@ -8,6 +8,7 @@ class Node():
         self.bias = np.random.randn(output_dim, 1)
         self.weight = np.random.randn(output_dim, input_dim)
         self.activate, self.backtivate = ACTIVATIONS.get(activation, no_activation)
+        self.activation_label = activation
         self.output = None
         self.input = None
         self.z = None
@@ -16,6 +17,11 @@ class Node():
         self.output = None
         self.input = None
         self.z = None
+        self.activate = None
+        self.backtivate = None
+
+    def reload(self):
+        self.activate, self.backtivate = ACTIVATIONS.get(self.activation_label, no_activation)
 
     def shape(self):
         return self.weight.shape
@@ -26,8 +32,9 @@ class Node():
         # add normalization
         self.input = input
         self.z = np.dot(self.weight, input) + self.bias
+        #print(f"activation: {self.activate}")
         self.output = self.activate(self.z)
-        # print(f"δ({self.weight.shape} . {input.shape} + {self.bias.shape}) = {self.output.shape}")
+        #print(f"δ({self.weight.shape} . {input.shape} + {self.bias.shape}) = {self.output.shape}")
         # print(f"weight: {self.weight}\n")
         # print(f"input: {input}\n")
         # print(f"output: {self.output}\n")

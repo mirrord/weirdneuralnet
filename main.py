@@ -102,6 +102,9 @@ def run_test(epochs):
     #costs.append(model.evaluate(X_test, Y_test))
     #epoch_vals.append(i)
     print(f"test error: {model.evaluate(X_test, Y_test)}")
+    prediction_classes = model.predict(X_test, debinarize=True)
+    num_correct = len(np.where(np.equal(prediction_classes, Y_test.argmax(axis=1))))
+    print(f"accuracy: {num_correct/len(prediction_classes)}")
     # final_error = model.evaluate(X_val, Y_val)
     # print(f"validation: {final_error}")
     #plt.plot(epoch_vals, costs)
@@ -112,10 +115,17 @@ def run_test(epochs):
         
 
 def load_test(fname):
+    print("load test")
     X_train, Y_train, X_test, Y_test, X_val, Y_val = get_dataset('./datasets/')
+    print("load test 2")
     model = WeirdNetwork.load(fname)
+    print("load test 3")
     final_error = model.evaluate(X_test, Y_test)
+    print("load test 4")
     print(f"cost: {final_error}")
+    prediction_classes = model.predict(X_test, debinarize=True)
+    num_correct = len(np.where(np.equal(prediction_classes, Y_test.argmax(axis=1))))
+    print(f"accuracy: {num_correct/len(prediction_classes)}")
     return model
 
 def equivalence_test(fname):
@@ -135,6 +145,7 @@ def equivalence_test(fname):
     print(f"class error: {[m.shape for m in classic_error[0]]}, {[m.shape for m in classic_error[1]]}")
 
 if __name__=="__main__":
-    model = run_test(100)
-    #load_model = load_test("my_model.wn")
+    #model = run_test(100)
+    load_model = load_test("my_model.wn")
+
     #equivalence_test("my_model.wn")
