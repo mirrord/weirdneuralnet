@@ -95,10 +95,14 @@ def run_test(epochs):
     #print(f"{cost.shape} = eval({X_test.shape}, {Y_test.shape})")
 
     costs = []
+    epoch_list = []
 
     for i in range(epochs):
         print(f"epoch: {i}...")
-        costs.append(model.train(X_train, Y_train))
+        model.train(X_train, Y_train)
+        if i%10 == 0:
+            epoch_list.append(i)
+            costs.append(model.cost(model.get_last_output(), Y_train))
 
     #costs.append(model.evaluate(X_test, Y_test))
     #epoch_vals.append(i)
@@ -108,7 +112,7 @@ def run_test(epochs):
     # final_error = model.evaluate(X_val, Y_val)
     # print(f"validation: {final_error}")
     #plt.plot(epoch_vals, costs)
-    plt.plot(list(range(epochs)), costs)
+    plt.plot(epoch_list, costs)
     plt.show()
     model.save("my_model.wn")
     return model
@@ -140,6 +144,6 @@ def equivalence_test(fname):
     print(f"class error: {[m.shape for m in classic_error[0]]}, {[m.shape for m in classic_error[1]]}")
 
 if __name__=="__main__":
-    # model = run_test(1000)
-    load_model = load_test("my_model.wn")
+    model = run_test(100)
+    #load_model = load_test("my_model.wn")
     #equivalence_test("my_model.wn")

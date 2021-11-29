@@ -98,6 +98,9 @@ class WeirdNetwork():
             return outputs[self.output_node]
         raise Exception("Output node is not fed")
 
+    def get_last_output(self):
+        return self.nodes[self.output_node].output
+
     ##TODO: backprop, train, minibatch train, etc
     def backpropagate(self, input, exp_output):
         num_sample = input.shape[1]
@@ -128,7 +131,7 @@ class WeirdNetwork():
 
         bup = {i:np.sum(b[0],1,keepdims=True)/num_sample for i,b in backfeed.items()}
         wup = {i:w[1]/num_sample for i,w in backfeed.items()}
-        return bup, wup, self.cost(predicted_output, exp_output)
+        return bup, wup
 
     def evaluate(self, input, exp_out):
         return self.cost(self.predict(input),exp_out)
@@ -137,13 +140,14 @@ class WeirdNetwork():
         #backprop
         #TODO: adapt to use a batch size
         #for x, y in input_with_labels:
-        bup, wup, cost = self.backpropagate(input, exp_output)
+        #bup, wup, cost = self.backpropagate(input, exp_output)
+        bup, wup = self.backpropagate(input, exp_output)
         #update
         for idx, node in enumerate(self.nodes):
             if idx in wup:
                 node.update(self.learning_rate*bup[idx], self.learning_rate*wup[idx])
 
-        return cost
+        return
 
 
 
