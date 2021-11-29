@@ -94,7 +94,7 @@ class WeirdNetwork():
             #print(f"taking output from output node {self.output_node}")
             #print(f"prediction output: {outputs[self.output_node].shape}")
             if debinarize:
-                return outputs[self.output_node].argmax(axis=1)
+                return outputs[self.output_node].argmax(axis=0)
             return outputs[self.output_node]
         raise Exception("Output node is not fed")
 

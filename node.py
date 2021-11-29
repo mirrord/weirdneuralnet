@@ -5,8 +5,10 @@ from node_utils import *
 
 class Node():
     def __init__(self, input_dim, output_dim, activation):
+        #TODO: impl initialization strats
+        # currently using Xavier
         self.bias = np.random.randn(output_dim, 1)
-        self.weight = np.random.randn(output_dim, input_dim)
+        self.weight = np.random.randn(output_dim, input_dim) * np.sqrt(1/(input_dim+output_dim))
         self.activate, self.backtivate = ACTIVATIONS.get(activation, no_activation)
         self.activation_label = activation
         self.output = None

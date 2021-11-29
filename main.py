@@ -54,6 +54,12 @@ def get_dataset(path):
     Y_train, Y_val, Y_test = binarize(Y_train).T, binarize(Y_val).T, binarize(Y_test).T
     return X_train, Y_train, X_test, Y_test, X_val, Y_val
 
+def get_accuracy(model, X, Y):
+    prediction_classes = model.predict(X, debinarize=True)
+    print(prediction_classes)
+    print(Y.argmax(axis=0))
+    num_correct = np.where(np.equal(prediction_classes, Y.argmax(axis=0)))[0].shape[0]
+    return num_correct, len(prediction_classes)
 
 def run_test(epochs):
     #fetch data
@@ -89,22 +95,16 @@ def run_test(epochs):
     #print(f"{cost.shape} = eval({X_test.shape}, {Y_test.shape})")
 
     costs = []
-    epoch_vals = []
 
     for i in range(epochs):
         print(f"epoch: {i}...")
         costs.append(model.train(X_train, Y_train))
 
-        # if i%5==0:
-        #     costs.append(model.evaluate(X_test, Y_test))
-        #     epoch_vals.append(i)
-
     #costs.append(model.evaluate(X_test, Y_test))
     #epoch_vals.append(i)
     print(f"test error: {model.evaluate(X_test, Y_test)}")
-    prediction_classes = model.predict(X_test, debinarize=True)
-    num_correct = len(np.where(np.equal(prediction_classes, Y_test.argmax(axis=1))))
-    print(f"accuracy: {num_correct/len(prediction_classes)}")
+    correct, total = get_accuracy(model, X_test, Y_test)
+    print(f"total samples: {total}\nnumber correct: {correct}\naccuracy: {correct/total}")
     # final_error = model.evaluate(X_val, Y_val)
     # print(f"validation: {final_error}")
     #plt.plot(epoch_vals, costs)
@@ -115,17 +115,12 @@ def run_test(epochs):
         
 
 def load_test(fname):
-    print("load test")
     X_train, Y_train, X_test, Y_test, X_val, Y_val = get_dataset('./datasets/')
-    print("load test 2")
     model = WeirdNetwork.load(fname)
-    print("load test 3")
     final_error = model.evaluate(X_test, Y_test)
-    print("load test 4")
     print(f"cost: {final_error}")
-    prediction_classes = model.predict(X_test, debinarize=True)
-    num_correct = len(np.where(np.equal(prediction_classes, Y_test.argmax(axis=1))))
-    print(f"accuracy: {num_correct/len(prediction_classes)}")
+    correct, total = get_accuracy(model, X_test, Y_test)
+    print(f"total samples: {total}\nnumber correct: {correct}\naccuracy: {correct/total}")
     return model
 
 def equivalence_test(fname):
@@ -145,7 +140,6 @@ def equivalence_test(fname):
     print(f"class error: {[m.shape for m in classic_error[0]]}, {[m.shape for m in classic_error[1]]}")
 
 if __name__=="__main__":
-    #model = run_test(100)
+    # model = run_test(1000)
     load_model = load_test("my_model.wn")
-
     #equivalence_test("my_model.wn")
