@@ -78,3 +78,12 @@ def classic_net_backprop(weights, biases, input, exp_out):
         # print(f"dw[{-l}] {nabla_w[-l].shape} = db {nabla_b[-l].shape} . output[{2-l-1}] {activations[-l-1].T.shape})")
     # print(nabla_w[0])
     return (nabla_b, nabla_w)
+
+
+def shuffle_in_unison(a, b):
+    # rng_state = np.random.get_state() #numpy only
+    rng_state = np.random.get_random_state()
+    np.random.shuffle(a)
+    # np.random.set_state(rng_state) #numpy only
+    np.random.set_random_state(rng_state)
+    np.random.shuffle(b)

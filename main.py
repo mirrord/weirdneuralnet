@@ -97,12 +97,13 @@ def run_test(epochs):
     costs = []
     epoch_list = []
 
-    for i in range(epochs):
-        print(f"epoch: {i}...")
-        model.train(X_train, Y_train)
-        if i%10 == 0:
-            epoch_list.append(i)
-            costs.append(model.cost(model.get_last_output(), Y_train))
+    # for i in range(epochs):
+    #     print(f"epoch: {i}...")
+    #     model.train(X_train, Y_train)
+    #     if i%10 == 0:
+    #         epoch_list.append(i)
+    #         costs.append(model.cost(model.get_last_output(), Y_train))
+    cost_history = model.train(X_train, Y_train, epochs)
 
     #costs.append(model.evaluate(X_test, Y_test))
     #epoch_vals.append(i)
@@ -111,10 +112,9 @@ def run_test(epochs):
     print(f"total samples: {total}\nnumber correct: {correct}\naccuracy: {correct/total}")
     # final_error = model.evaluate(X_val, Y_val)
     # print(f"validation: {final_error}")
-    #plt.plot(epoch_vals, costs)
-    plt.plot(epoch_list, costs)
+    plt.plot(list(range(epochs)), cost_history)
     plt.show()
-    model.save("my_model.wn")
+    # model.save("my_model.wn")
     return model
         
 

@@ -136,18 +136,20 @@ class WeirdNetwork():
     def evaluate(self, input, exp_out):
         return self.cost(self.predict(input),exp_out)
 
-    def train(self, input, exp_output):
-        #backprop
+    def train(self, input, exp_output, epochs):
         #TODO: adapt to use a batch size
-        #for x, y in input_with_labels:
-        #bup, wup, cost = self.backpropagate(input, exp_output)
-        bup, wup = self.backpropagate(input, exp_output)
-        #update
-        for idx, node in enumerate(self.nodes):
-            if idx in wup:
-                node.update(self.learning_rate*bup[idx], self.learning_rate*wup[idx])
+        cost_history = []
+        for i in range(epochs):
+            print(f"epoch {i}...") #TODO: use logging instead
+            shuffle_in_unison(input.T, exp_output.T)
+            bup, wup = self.backpropagate(input, exp_output)
+            cost_history.append(self.cost(self.get_last_output(), exp_output))
+            #update
+            for idx, node in enumerate(self.nodes):
+                if idx in wup:
+                    node.update(self.learning_rate*bup[idx], self.learning_rate*wup[idx])
 
-        return
+        return cost_history
 
 
 

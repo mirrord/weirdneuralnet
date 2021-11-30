@@ -28,14 +28,9 @@ node_params =[
 then train it:
 
 ```
-    for i in range(epochs):
-        print(f"epoch: {i}...")
-        model.train(X_train, Y_train)
-        if i%10 == 0:
-            epoch_list.append(i)
-            costs.append(model.cost(model.get_last_output(), Y_train))
-    # graph the cost during training
-    plt.plot(epoch_list, costs)
+    cost_history = model.train(X_train, Y_train, epochs)
+    #plot cost history
+    plt.plot(list(range(epochs)), cost_history)
     plt.show()
 ```
 
