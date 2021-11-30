@@ -81,9 +81,7 @@ def classic_net_backprop(weights, biases, input, exp_out):
 
 
 def shuffle_in_unison(a, b):
-    # rng_state = np.random.get_state() #numpy only
-    rng_state = np.random.get_random_state()
-    np.random.shuffle(a)
-    # np.random.set_state(rng_state) #numpy only
-    np.random.set_random_state(rng_state)
-    np.random.shuffle(b)
+    assert(len(a) == len(b))
+    p = np.random.permutation(len(a))
+    a[:] = a[p]
+    b[:] = b[p]

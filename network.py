@@ -69,6 +69,7 @@ class WeirdNetwork():
         raise Exception("Output node is not fed")
 
     def predict(self, input, debinarize=False):
+        '''input shape must be (features, samples)'''
         outputs = {}
         to_traverse = []
         #print(f"feed idxs: {self.feed_indices}")
@@ -140,7 +141,7 @@ class WeirdNetwork():
         #TODO: adapt to use a batch size
         cost_history = []
         for i in range(epochs):
-            print(f"epoch {i}...") #TODO: use logging instead
+            print(f"epoch {i}...") #TODO: use progress bar instead
             shuffle_in_unison(input.T, exp_output.T)
             bup, wup = self.backpropagate(input, exp_output)
             cost_history.append(self.cost(self.get_last_output(), exp_output))
