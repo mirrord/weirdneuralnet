@@ -1,1 +1,5 @@
-see https://stackoverflow.com/questions/3985619/how-to-calculate-a-logistic-sigmoid-function-in-python for sigmoid optimization discussion.
+
+cost functions: https://stats.stackexchange.com/questions/154879/a-list-of-cost-functions-used-in-neural-networks-alongside-applications
+activation functions:
+https://towardsdatascience.com/activation-functions-neural-networks-1cbd9f8d91d6
+https://www.v7labs.com/blog/neural-networks-activation-functions

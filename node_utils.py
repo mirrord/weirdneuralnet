@@ -26,6 +26,7 @@ def no_activation(x):
 
 ACTIVATIONS ={
     "sigmoid": (sigmoid, dsigmoid),
+    "relu": (relu, drelu),
 }
 
 ## cost functions
@@ -35,10 +36,29 @@ def diff_squares(y, y_true):
 def ddiff_squares(y, y_true):
     return 2*(y-y_true)
 
+def quadratic(y, y_true):
+    return 0.5*diff_squares(y,y_true)
+def dquadratic(y, y_true):
+    return y-y_true
+
+def cross_entropy(y, y_true):
+    return -1*np.sum( y_true*np.log(y) + (1-y_true)*np.log(1-y) )
+def dcross_entropy(y, y_true):
+    return (y-y_true)/(y*(1-y))
+
+def hellinger(y, y_true):
+    return 0.70710678*np.sum( np.square(np.sqrt(y)-np.sqrt(y_true)) )
+def dhellinger(y, y_true):
+    rooty = np.sqrt(y)
+    return (rooty - np.sqrt(y_true))/(1.41421356*rooty)
+
 def no_cost(x):
     raise Exception("cost function not found or not implemented")
 COSTS = {
     "diff_squares": (diff_squares, ddiff_squares),
+    "quadratic": (quadratic, dquadratic),
+    "cross-entropy": (cross_entropy, dcross_entropy),
+    "hellinger": (hellinger, dhellinger),
 }
 ## regularization functions
 
@@ -59,6 +79,7 @@ def classic_net_predict(weights, biases, input):
     return input
 
 def classic_net_backprop(weights, biases, input, exp_out):
+    #TODO: turn this into a compiled NN class!
     #forward prop while recording
     activations = [input] # list to store all the activations, layer by layer
     zs = [] # list to store all the z vectors, layer by layer
