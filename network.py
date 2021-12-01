@@ -83,11 +83,9 @@ class WeirdNetwork():
         for idx in to_traverse:
             if idx not in outputs:
                 #find outputs this node wants as input
-                inputs = [outputs[i] for i in self.backfeed_indices[idx] if i in outputs]
+                inputs = [self.nodes[i].get_output() for i in self.backfeed_indices[idx]]
                 #print(f"feeding node {idx} with outputs from: {[i for i in self.backfeed_indices[idx] if i in outputs]}")
-                #TODO: ask nodes for past output instead of assuming 0
-                #synapse them together
-                #TODO: synapse function goes here
+                #"synapse" them together
                 this_input = sum(inputs)
                 outputs[idx] = self.nodes[idx].feed(this_input)
                 to_traverse.extend([fidx for fidx in self.feed_indices[idx] if fidx not in outputs])
