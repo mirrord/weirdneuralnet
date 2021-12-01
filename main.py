@@ -1,15 +1,16 @@
 
+import os
+import hashlib, requests, gzip
+import argparse
+
+import matplotlib.pyplot as plt
+
 #import numpy as np
 import cupy as np
 from numpy import frombuffer, setdiff1d
 
 from network import WeirdNetwork
-import node_utils
-
-import os
-import hashlib, requests, gzip
-
-import matplotlib.pyplot as plt
+from node_utils import binarize
 
 def get_dataset(path):
     def fetch(url):
@@ -21,7 +22,7 @@ def get_dataset(path):
             with open(fp, "wb") as f:
                 data = requests.get(url).content
                 f.write(data)
-        #return np.frombuffer(gzip.decompress(data), dtype=np.uint8).copy())
+        #return np.frombuffer(gzip.decompress(data), dtype=np.uint8).copy()) #numpy version
         return np.array(frombuffer(gzip.decompress(data), dtype=np.uint8).copy())
 
     X = fetch("http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz")[0x10:].reshape((-1, 28, 28))
@@ -34,7 +35,7 @@ def get_dataset(path):
     np.random.shuffle(rand)
     train_no=rand[:50000]
 
-    #val_no=np.setdiff1d(rand,train_no)
+    #val_no=np.setdiff1d(rand,train_no) #numpy version
     val_no=np.array(setdiff1d(np.asnumpy(rand),np.asnumpy(train_no)))
 
     X_train,X_val=X[train_no,:,:],X[val_no,:,:]
@@ -42,30 +43,38 @@ def get_dataset(path):
     #reshape
     X_train = X_train.reshape((-1,28*28)).T
     X_val = X_val.reshape((-1,28*28)).T
-    # def binarize(y):
-    #     targets = np.zeros((len(y),10), np.float32)
-    #     targets[range(targets.shape[0]),y] = 1
-    #     return targets
-    def binarize(y):
-        targets = np.zeros((len(y),10), np.float32)
-        for i in range(targets.shape[0]):
-            targets[i][y[i]] = 1
-        return targets
-    Y_train, Y_val, Y_test = binarize(Y_train).T, binarize(Y_val).T, binarize(Y_test).T
+    
+    Y_train, Y_val, Y_test = binarize(Y_train, 10).T, binarize(Y_val, 10).T, binarize(Y_test, 10).T
     return X_train, Y_train, X_test, Y_test, X_val, Y_val
 
 def get_accuracy(model, X, Y):
     prediction_classes = model.predict(X, debinarize=True)
-    print(prediction_classes)
-    print(Y.argmax(axis=0))
     num_correct = np.where(np.equal(prediction_classes, Y.argmax(axis=0)))[0].shape[0]
     return num_correct, len(prediction_classes)
 
-def run_test(epochs):
+def train(model, epochs, acc_threshold, graph_it):
     #fetch data
     X_train, Y_train, X_test, Y_test, X_val, Y_val = get_dataset('./datasets/')
 
-    #build network
+    print("train(): accuracy threshold not implemented yet")
+
+    cost_history = model.train(X_train, Y_train, epochs)
+
+    print(f"test error: {model.evaluate(X_test, Y_test)}")
+    correct, total = get_accuracy(model, X_test, Y_test)
+    print(f"total test samples: {total}\nnumber correct: {correct}\naccuracy: {correct/total}")
+
+    if graph_it:
+        plt.plot(list(range(epochs)), cost_history)
+        plt.show()
+
+    return model
+
+def build_model(fname):
+    # import json
+    # with open(fname, 'r') as f:
+    #     config = json.load(f.read())
+    print("build_model is not implemented yet")
     node_params =[
         {
             'x':28*28,
@@ -87,63 +96,69 @@ def run_test(epochs):
     ]
     edges = [
         (0,1),
+        (0,2),
         (1,2)
     ]
-    model = WeirdNetwork(node_params, edges)
-    #print(f"calculating eval({X_test.shape}, {Y_test.shape})")
-    #cost = model.evaluate(list(zip(X_test, Y_test)))
-    #print(f"{cost.shape} = eval({X_test.shape}, {Y_test.shape})")
+    return WeirdNetwork(node_params, edges)
 
-    costs = []
-    epoch_list = []
+def run(model, inp_fname):
+    with open(inp_fname, 'rb') as f:
+        #TODO: use a different ingestion method based on the type of file
+        #   pull it into a np vector!
+        buffer = f.read()
+    return model.predict(buffer)
 
-    # for i in range(epochs):
-    #     print(f"epoch: {i}...")
-    #     model.train(X_train, Y_train)
-    #     if i%10 == 0:
-    #         epoch_list.append(i)
-    #         costs.append(model.cost(model.get_last_output(), Y_train))
-    cost_history = model.train(X_train, Y_train, epochs)
+def experiment():
+    print("not implemented yet")
 
-    #costs.append(model.evaluate(X_test, Y_test))
-    #epoch_vals.append(i)
-    print(f"test error: {model.evaluate(X_test, Y_test)}")
-    correct, total = get_accuracy(model, X_test, Y_test)
-    print(f"total samples: {total}\nnumber correct: {correct}\naccuracy: {correct/total}")
-    # final_error = model.evaluate(X_val, Y_val)
-    # print(f"validation: {final_error}")
-    plt.plot(list(range(epochs)), cost_history)
-    plt.show()
-    # model.save("my_model.wn")
-    return model
-        
-
-def load_test(fname):
-    X_train, Y_train, X_test, Y_test, X_val, Y_val = get_dataset('./datasets/')
-    model = WeirdNetwork.load(fname)
-    final_error = model.evaluate(X_test, Y_test)
-    print(f"cost: {final_error}")
-    correct, total = get_accuracy(model, X_test, Y_test)
-    print(f"total samples: {total}\nnumber correct: {correct}\naccuracy: {correct/total}")
-    return model
-
-def equivalence_test(fname):
-    X_train, Y_train, X_test, Y_test, X_val, Y_val = get_dataset('./datasets/')
-    model = WeirdNetwork.load(fname)
-    weights, biases = model.compile()
-    model_prediction = model.predict(X_train)
-    classic_prediction = node_utils.classic_net_predict(weights, biases, X_train)
-    print('####################################')
-    assert(np.array_equal(model_prediction, classic_prediction))
-    #print(f"model output ({model_prediction.shape}): {model_prediction}")
-    #print(f"classic output ({classic_prediction.shape}): {classic_prediction}")
-
-    model_error = model.backpropagate(X_train, Y_train)
-    classic_error = node_utils.classic_net_backprop(weights, biases, X_train, Y_train)
-    print(f"model error: {[(i, m.shape) for i,m in model_error[0].items()]}, {[(i,m.shape) for i,m in model_error[1].items()]}")
-    print(f"class error: {[m.shape for m in classic_error[0]]}, {[m.shape for m in classic_error[1]]}")
+def play():
+    print("this space reserved for *really* weird experiments")
 
 if __name__=="__main__":
-    model = run_test(100)
-    #load_model = load_test("my_model.wn")
-    #equivalence_test("my_model.wn")
+    parser = argparse.ArgumentParser(description='Experiment with a WeirdNetwork.')
+    parser.add_argument('action',type=str, choices={"train", "experiment", "run", "play"},
+                        help='action to take')
+    parser.add_argument('--load', type=str,
+                        help='load a saved model file')
+    parser.add_argument('--save', type=str,
+                        help='save a model to a file')
+    parser.add_argument('--config', type=str,
+                        help='load a model or experiment configuration')
+    # training only
+    parser.add_argument('--epochs', type=int, default=100,
+                        help='number of training epochs to run')
+    parser.add_argument('--graph', type=bool, default=False,
+                        help='graph the cost over training')
+    parser.add_argument('--accuracy', type=int, default=100,
+                        help='accuracy threshold at which to stop training')
+    # run/play only
+    parser.add_argument('--input', type=str,
+                        help='model input')
+
+    args = parser.parse_args()
+
+    if args.action == "train":
+        model = None
+        if args.load:
+            model = WeirdNetwork.load(args.load)
+        elif args.config:
+            model = build_model(args.config)
+        if not model:
+            raise "I need to either --load a model or make a new one from a --config!"
+        model = train(model, args.epochs, args.accuracy/100, args.graph)
+        if args.save:
+            print(f"saving model at {args.save}")
+            model.save(args.save)
+    elif args.action == "experiment":
+        experiment()
+    elif args.action == "run":
+        model = None
+        if args.load:
+            model = WeirdNetwork.load(args.load)
+        elif args.config:
+            model = build_model(args.config)
+        if not model:
+            raise "I need to either --load a model or make a new one from a --config!"
+        run(model, args.input)
+    elif args.action == "play":
+        play()
