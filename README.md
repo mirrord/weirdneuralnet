@@ -1,3 +1,17 @@
+# TODO
+ * impl a couple more activation functions
+ * impl normalization
+ * impl regularization
+ * turn into a real package
+ * impl network compilation
+ * impl unsupervised learning: clustering
+    * centroid calc
+    * edge case calc
+    * unsupervised training types
+ * impl transfer training
+ * impl some experiments
+ * clean up CLI
+
 # weirdneuralnet
 WeirdNeuralNet is a neural network library for exploring new topologies and training paradigms.
 

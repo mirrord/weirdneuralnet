@@ -63,6 +63,7 @@ COSTS = {
 ## regularization functions
 
 ## synapse functions
+##  probably won't touch these
 
 ## normalization functions
 
