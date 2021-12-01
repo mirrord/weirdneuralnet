@@ -13,6 +13,14 @@ def dsigmoid(x):
     sig = sigmoid(x)
     return sig*(1-sig)
 
+relu = np.ElementwiseKernel(
+        'float64 x',
+        'float64 y',
+        'y = x * (x > 0)',
+        'relu')
+def drelu(x):
+    return np.greater(x, 0).astype('float64')
+
 def no_activation(x):
     raise Exception("activation function not found or not implemented")
 
