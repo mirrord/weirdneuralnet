@@ -127,7 +127,7 @@ if __name__=="__main__":
     # training only
     parser.add_argument('--epochs', type=int, default=100,
                         help='number of training epochs to run')
-    parser.add_argument('--graph', type=bool, default=False,
+    parser.add_argument('--graph', action="store_true",
                         help='graph the cost over training')
     parser.add_argument('--accuracy', type=int, default=100,
                         help='accuracy threshold at which to stop training')

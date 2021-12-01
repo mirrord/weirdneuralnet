@@ -23,7 +23,7 @@ class Node():
         self.backtivate = None
 
     def get_output(self):
-        return self.output if self.output else 0
+        return 0 if self.output is None else self.output
 
     def reload(self):
         self.activate, self.backtivate = ACTIVATIONS.get(self.activation_label, no_activation)
