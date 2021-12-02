@@ -106,11 +106,14 @@ def elastic_reg(alpha):
     L2 = lasso_reg(alpha)
     return lambda w: L1(w)+L2(w)
 
+def noreg(l):
+    return lambda w: 0
 # these require hyperparameters!
 REGULARIZATIONS = {
     "ridge": ridge_reg,
     "lasso": lasso_reg,
-    "elastic": elastic_reg
+    "elastic": elastic_reg,
+    "none": noreg
 }
 
 
@@ -127,10 +130,13 @@ def minmaxneg_normalize(x):
 def meanstd_standardize(x):
     return (x-np.mean(x))/np.std(x)
 
+def nonorm(x):
+    return x
 NORMALIZATIONS = {
     "minmax": minmax_normalize,
     "minmax-1": minmaxneg_normalize,
     "standard": meanstd_standardize,
+    "none": nonorm,
 }
 
 

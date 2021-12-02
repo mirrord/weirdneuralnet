@@ -9,7 +9,12 @@ from pickle import Pickler, Unpickler
 
 
 class WeirdNetwork():
-    def __init__(self, node_params, edges, error_cost_func="diff_squares", learning_rate=0.01):
+    def __init__(self,
+                node_params,
+                edges,
+                error_cost_func="diff_squares",
+                learning_rate=0.01,
+                regularize=(None, 0)):
         # node_params should be a list of dicts of node parameters
         # edges should be a list of node index tuples denoting connections between nodes
         self.nodes = []
@@ -19,6 +24,7 @@ class WeirdNetwork():
         self.output_node = 0
         self.learning_rate = learning_rate
         self.input, self.output = None, None
+        self.regularize_params, self.regularize = regularize, REGULARIZATIONS.get(regularize[0], noreg)(regularize[1])
         self.cost, self.cost_deriv = COSTS.get(error_cost_func, (diff_squares, ddiff_squares))
         for idx, param in enumerate(node_params):
             self.feed_indices[idx] = [edge[1] for edge in edges if edge[0]==idx]
@@ -44,10 +50,12 @@ class WeirdNetwork():
             model = u.load()
         for node in model.nodes:
             node.reload()
+        model.regularize = REGULARIZATIONS.get(model.regularize_params[0], noreg)(model.regularize_params[1])
         return model
 
     def save(self, fname, keep_history=False):
         if not keep_history:
+            self.regularize = None
             for node in self.nodes:
                 node.clear_history()
         with open(fname, 'wb') as f:
@@ -146,7 +154,10 @@ class WeirdNetwork():
             #update
             for idx, node in enumerate(self.nodes):
                 if idx in wup:
-                    node.update(self.learning_rate*bup[idx], self.learning_rate*wup[idx])
+                    update_weights = self.learning_rate*wup[idx]
+                    if self.regularize_params[0] is not None:
+                        update_weights+=self.regularize(wup)
+                    node.update(self.learning_rate*bup[idx], update_weights)
 
         return cost_history
 

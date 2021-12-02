@@ -4,12 +4,17 @@ import cupy as np
 from node_utils import *
 
 class Node():
-    def __init__(self, input_dim, output_dim, activation):
+    def __init__(self,
+                input_dim,
+                output_dim,
+                activation,
+                normalize=None):
         #TODO: impl initialization strats
         # currently using Xavier
         self.bias = np.random.randn(output_dim, 1)
         self.weight = np.random.randn(output_dim, input_dim) * np.sqrt(1/(input_dim+output_dim))
         self.activate, self.backtivate = ACTIVATIONS.get(activation, no_activation)
+        self.normalize_label, self.normalize = normalize, NORMALIZATIONS.get(normalize, nonorm)
         self.activation_label = activation
         self.output = None
         self.input = None
@@ -21,6 +26,7 @@ class Node():
         self.z = None
         self.activate = None
         self.backtivate = None
+        self.normalize = None
 
     def get_output(self):
         return 0 if self.output is None else self.output
@@ -34,7 +40,8 @@ class Node():
     def feed(self, input):
         #TODO:
         # add linear synapsing
-        # add normalization
+        if self.normalize_label:
+            input = self.normalize(input)
         self.input = input
         self.z = np.dot(self.weight, input) + self.bias
         #print(f"activation: {self.activate}")
