@@ -96,11 +96,43 @@ COSTS = {
     "hellinger": (hellinger, dhellinger),
 }
 ## regularization functions
+def ridge_reg(lamb):
+    return lambda w: lamb*np.sum(np.abs(w))
+def lasso_reg(lamb):
+    #generally considered to be more accurate and slower
+    return lambda w: lamb*np.sum(np.square(w))
+def elastic_reg(alpha):
+    L1 = ridge_reg(1-alpha)
+    L2 = lasso_reg(alpha)
+    return lambda w: L1(w)+L2(w)
+
+# these require hyperparameters!
+REGULARIZATIONS = {
+    "ridge": ridge_reg,
+    "lasso": lasso_reg,
+    "elastic": elastic_reg
+}
+
 
 ## synapse functions
 ##  probably won't touch these
 
-## normalization functions
+## normalization & standardization functions
+def minmax_normalize(x):
+    min = np.min(x)
+    return (x-min)/(np.max(x)-min)
+def minmaxneg_normalize(x):
+    min = np.min(x)
+    return 2*(x-min)/(np.max(x)-min) -1
+def meanstd_standardize(x):
+    return (x-np.mean(x))/np.std(x)
+
+NORMALIZATIONS = {
+    "minmax": minmax_normalize,
+    "minmax-1": minmaxneg_normalize,
+    "standard": meanstd_standardize,
+}
+
 
 
 ## reference functions

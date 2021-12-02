@@ -1,7 +1,7 @@
 # TODO
- * impl a couple more activation functions
- * impl normalization
- * impl regularization
+ * impl a couple more activation functions [DONE]
+ * impl normalization [DONE]
+ * impl regularization [DONE]
  * turn into a real package
  * impl network compilation
  * impl unsupervised learning: clustering
@@ -33,19 +33,19 @@ node_params =[
             'output':True
         }
     ]
-    edges = [
-        (0,1),
-    ]
-    model = WeirdNetwork(node_params, edges)
+edges = [
+    (0,1),
+]
+model = WeirdNetwork(node_params, edges)
 ```
 
 then train it:
 
 ```
-    cost_history = model.train(X_train, Y_train, epochs)
-    #plot cost history
-    plt.plot(list(range(epochs)), cost_history)
-    plt.show()
+cost_history = model.train(X_train, Y_train, epochs)
+#plot cost history
+plt.plot(list(range(epochs)), cost_history)
+plt.show()
 ```
 
 ## install

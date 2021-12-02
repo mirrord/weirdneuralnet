@@ -6,6 +6,7 @@ https://www.v7labs.com/blog/neural-networks-activation-functions
 
 regularization: https://www.analyticsvidhya.com/blog/2018/04/fundamentals-deep-learning-regularization-techniques/
 https://towardsdatascience.com/how-to-improve-a-neural-network-with-regularization-8a18ecda9fe3
+https://www.analyticssteps.com/blogs/l2-and-l1-regularization-machine-learning
 
 normalization: https://www.baeldung.com/cs/normalizing-inputs-artificial-neural-network
 
