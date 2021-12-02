@@ -2,6 +2,7 @@
 
 import cupy as cp
 from time import time
+from scipy.special import softmax
 
 
 def kernelize(s, label):
@@ -45,7 +46,28 @@ dleaky = {
     "where": lambda x: cp.where(x > 0, 1, 0.01)
 }
 
-funcs = dleaky
+def softmax_so(x):
+    s = cp.max(x, axis=1)
+    s = s[:, cp.newaxis] # necessary step to do broadcasting
+    e_x = cp.exp(x - s)
+    div = cp.sum(e_x, axis=1)
+    div = div[:, cp.newaxis] # ditto
+    return e_x / div
+
+softmax_funcs = {
+    "scipy": lambda x: softmax(x.get()),
+    "stack overflow": softmax_so
+}
+
+def dsoftmax_eye(x):
+    sm = softmax_so(x)
+    return sm * (cp.eye(x.shape[0]) - sm.T)
+
+dsoftmax_funcs = {
+    "eye": dsoftmax_eye
+}
+
+funcs = dsoftmax_funcs
 
 def timeit(f):
     x = cp.random.randn(5000,5000)
@@ -76,5 +98,3 @@ print("once:")
 time_once()
 print("\nlooped:")
 time_looped()
-print("\nseparate loops:")
-time_separate_looped()

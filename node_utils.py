@@ -29,11 +29,28 @@ leaky_relu = np.ElementwiseKernel(
 def dleaky_relu(x):
     return np.where(x > 0, 1, 0.01)
 
-
 tanh = np.tanh
 def dtanh(x):
     t = tanh(x)
     return 1-(t*t)
+
+def softmax(x):
+    s = np.max(x, axis=1)
+    s = s[:, np.newaxis] # necessary step to do broadcasting
+    e_x = np.exp(x - s)
+    div = np.sum(e_x, axis=1)
+    div = div[:, np.newaxis] # ditto
+    return e_x / div
+def dsoftmax(x):
+    sm = softmax(x)
+    return sm * (np.eye(x.shape[0]) - sm.T)
+
+def swish(x):
+    return x*sigmoid(x)
+def dswish(x):
+    sigx = sigmoid(x)
+    swishx = x*sigx
+    return swishx+(sigx*(1-swishx))
 
 def no_activation(x):
     raise Exception("activation function not found or not implemented")
@@ -43,6 +60,8 @@ ACTIVATIONS ={
     "relu": (relu, drelu),
     "leaky relu": (leaky_relu, dleaky_relu),
     "tanh": (tanh, dtanh),
+    "softmax": (softmax, dsoftmax),
+    "swish": (swish, dswish)
 }
 
 ## cost functions
