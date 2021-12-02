@@ -21,12 +21,28 @@ relu = np.ElementwiseKernel(
 def drelu(x):
     return np.greater(x, 0).astype('float64')
 
+leaky_relu = np.ElementwiseKernel(
+        'float64 x',
+        'float64 y',
+        'y = (x * (x > 0)) + ((x <= 0) * x * 0.01)',
+        'leakyurelu')
+def dleaky_relu(x):
+    return np.where(x > 0, 1, 0.01)
+
+
+tanh = np.tanh
+def dtanh(x):
+    t = tanh(x)
+    return 1-(t*t)
+
 def no_activation(x):
     raise Exception("activation function not found or not implemented")
 
 ACTIVATIONS ={
     "sigmoid": (sigmoid, dsigmoid),
     "relu": (relu, drelu),
+    "leaky relu": (leaky_relu, dleaky_relu),
+    "tanh": (tanh, dtanh),
 }
 
 ## cost functions

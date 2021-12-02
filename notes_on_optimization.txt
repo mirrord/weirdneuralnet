@@ -8,3 +8,6 @@ regularization: https://www.analyticsvidhya.com/blog/2018/04/fundamentals-deep-l
 https://towardsdatascience.com/how-to-improve-a-neural-network-with-regularization-8a18ecda9fe3
 
 normalization: https://www.baeldung.com/cs/normalizing-inputs-artificial-neural-network
+
+drawing graphs: https://stackoverflow.com/questions/28533111/plotting-networkx-graph-with-node-labels-defaulting-to-node-name
+https://stackoverflow.com/questions/10379448/plotting-directed-graphs-in-python-in-a-way-that-show-all-edges-separately

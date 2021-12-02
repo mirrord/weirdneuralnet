@@ -30,7 +30,22 @@ drelu_funcs = {
     "mult": lambda x: (x > 0) * 1.0
 }
 
-funcs = drelu_funcs
+leaky_funcs = {
+    "elementwise": kernelize('y = (x * (x > 0)) + ((x <= 0) * x * 0.01)', 'leakyurelu'),
+    "maximum": lambda x: cp.maximum(0.1*x,x),
+    "where": lambda x: cp.where(x > 0, x, x * 0.01)
+}
+
+def oneslike(x):
+    dx = cp.ones_like(x)
+    dx[x < 0] = 0.1
+    return dx
+dleaky = {
+    "oneslike": oneslike,
+    "where": lambda x: cp.where(x > 0, 1, 0.01)
+}
+
+funcs = dleaky
 
 def timeit(f):
     x = cp.random.randn(5000,5000)
@@ -38,8 +53,28 @@ def timeit(f):
     r = f(x)
     return time()-t
 
-for name, func in funcs.items():
-    t = 0
+def time_once():
+    for name, func in funcs.items():
+        print(f"{name}: {timeit(func)}")
+
+def time_looped():
+    times = {k:0 for k in funcs.keys()}
     for i in range(100):
-        t+=timeit(func)
-    print(f"{name}: {t/100} ms")
+        for name, func in funcs.items():
+            times[name]+=timeit(func)
+    for k, t in times.items():
+        print(f"{k}: {t/100} ms")
+
+def time_separate_looped():
+    for name, func in funcs.items():
+        t = 0
+        for i in range(100):
+            t+=timeit(func)
+        print(f"{name}: {t/100} ms")
+
+print("once:")
+time_once()
+print("\nlooped:")
+time_looped()
+print("\nseparate loops:")
+time_separate_looped()
