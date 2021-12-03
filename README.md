@@ -7,7 +7,7 @@ train a new Weird Network from scratch on the command line:
 ```
 C:/users/JohnCleese> python -m weirdneuralnet --config not_implemented_yet.cfg --train --epochs 100 --graph --save my_model.wnn
 ```
-![example training cost plot](https://github.com/mirrord/weirdneuralnet/blob/Figure_1.jpg?raw=true)
+![example training cost plot](https://github.com/mirrord/weirdneuralnet/tree/main/blob/Figure_1.jpg?raw=true)
 
 At some point in the future, you'll then be able to load your saved model and train it more, fine-tune it, modify it, examine it, and/or use it on some input data of your choosing!
 
