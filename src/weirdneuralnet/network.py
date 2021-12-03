@@ -1,7 +1,7 @@
 
 
-from node import Node
-from node_utils import *
+from .node import Node
+from .node_utils import *
 #import numpy as np
 import cupy as np
 

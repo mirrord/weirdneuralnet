@@ -1,23 +1,18 @@
-# TODO
- * impl a couple more activation functions [DONE]
- * impl normalization [DONE]
- * impl regularization [DONE]
- * turn into a real package
- * impl network compilation
- * impl unsupervised learning: clustering
-    * centroid calc
-    * edge case calc
-    * unsupervised training types
- * impl transfer training
- * impl some experiments
- * clean up CLI
+# WeirdNeuralNet
 
-# weirdneuralnet
-WeirdNeuralNet is a neural network library for exploring new topologies and training paradigms.
+WeirdNeuralNet is a neural network library for exploring new topologies and training paradigms. It runs on any CUDA-enabled GPU.
 
-Create your own Weird Network:
+## CLI
+train a new Weird Network from scratch on the command line:
 ```
-from network import WeirdNetwork
+C:/users/JohnCleese> python -m weirdneuralnet --config not_implemented_yet.cfg --train --epochs 100 --graph --save my_model.wnn
+```
+![example training cost plot](https://github.com/mirrord/weirdneuralnet/blob/Figure_1.png?raw=true)
+
+## library interface
+Create your own Weird Network in your project:
+```
+from weirdneuralnet import WeirdNetwork
 
 node_params =[
         {
@@ -51,10 +46,10 @@ plt.show()
 ## install
 
 requirements:
-requests
-numpy
-matplotlib
-cupy
+CUDA (see https://developer.nvidia.com/cuda-downloads)
+CuPy (see https://pypi.org/project/cupy/ for pre-built binaries)
 
-then just copy down this code.
-There's no formal package yet. Maybe I'll get around to that at some point.
+pull down this code, cd into the directory and run:
+```pip install .```
+
+This code has been tested using: python 3.7.8, CUDA 11.5, Windows 10

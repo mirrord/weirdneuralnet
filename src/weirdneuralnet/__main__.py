@@ -9,8 +9,8 @@ import matplotlib.pyplot as plt
 import cupy as np
 from numpy import frombuffer, setdiff1d
 
-from network import WeirdNetwork
-from node_utils import binarize
+from .network import WeirdNetwork
+from .node_utils import binarize
 
 def get_dataset(path):
     def fetch(url):

@@ -1,7 +1,7 @@
 
 #import numpy as np
 import cupy as np
-from node_utils import *
+from .node_utils import *
 
 class Node():
     def __init__(self,

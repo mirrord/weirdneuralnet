@@ -1,0 +1,14 @@
+# TODO
+ * impl a couple more activation functions [DONE]
+ * impl normalization [DONE]
+ * impl regularization [DONE]
+ * turn into a real package [DONE]
+ * document existing code
+ * impl network compilation
+ * impl unsupervised learning: clustering
+    * centroid calc
+    * edge case calc
+    * unsupervised training types
+ * impl transfer training
+ * impl some experiments
+ * clean up CLI
