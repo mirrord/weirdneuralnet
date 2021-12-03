@@ -9,6 +9,8 @@ C:/users/JohnCleese> python -m weirdneuralnet --config not_implemented_yet.cfg -
 ```
 ![example training cost plot](https://github.com/mirrord/weirdneuralnet/blob/Figure_1.png?raw=true)
 
+At some point in the future, you'll then be able to load your saved model and train it more, fine-tune it, modify it, examine it, and/or use it on some input data of your choosing!
+
 ## library interface
 Create your own Weird Network in your project:
 ```

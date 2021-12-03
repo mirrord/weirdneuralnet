@@ -4,11 +4,37 @@ import cupy as np
 from .node_utils import *
 
 class Node():
+    '''Represents a layer in conventional NN terms.
+
+    Methods
+    -------------
+    clear_history
+        clear the cache
+    get_output
+        retrieve the most recent activation output
+    reload
+        reinitialize important cache variables
+    shape
+        get the shape of the node's matrix
+    feed
+        calculate activation output
+    backfeed
+        calculate backprop signals
+    update
+        update the weights and biases'''
+
     def __init__(self,
-                input_dim,
-                output_dim,
-                activation,
-                normalize=None):
+                input_dim:int,
+                output_dim:int,
+                activation:str,
+                normalize:str=''):
+        '''Construct a Node.
+        Inputs:
+            input_dim - the size of the input vector expected
+            output_dim - the size of the output vector to be calculated
+            activation - string name of activation function to use
+            normalize - string name of normalization function to use
+        '''
         #TODO: impl initialization strats
         # currently using Xavier
         self.bias = np.random.randn(output_dim, 1)
@@ -21,6 +47,7 @@ class Node():
         self.z = None
 
     def clear_history(self):
+        '''Clear the cache, including input, output, and function pointers.'''
         self.output = None
         self.input = None
         self.z = None
@@ -29,15 +56,23 @@ class Node():
         self.normalize = None
 
     def get_output(self):
+        '''Retrieve the last-calculated output of this node, or 0 if never activated.'''
         return 0 if self.output is None else self.output
 
     def reload(self):
+        '''Re-establish function pointers from stored function names.'''
         self.activate, self.backtivate = ACTIVATIONS.get(self.activation_label, no_activation)
+        self.normalize = NORMALIZATIONS.get(self.normalize_label, nonorm)
 
     def shape(self):
+        '''Get the shape of the weight matrix.'''
         return self.weight.shape
 
     def feed(self, input):
+        '''Calculate the foward activation with some input.
+        Inputs:
+            input - the input matrix, which must be of shape (num features, num samples)
+        '''
         if self.normalize_label:
             input = self.normalize(input)
         self.input = input
@@ -51,6 +86,10 @@ class Node():
         return self.output
 
     def backfeed(self, de_dz_foward):
+        '''Calculate the gradient descent signal from the backpropogated error signal.
+        Inputs:
+            de_dz_forward - the next layers' error signal
+        '''
         #print(f"de/dz: {de_dz_foward.shape}")
         delta_bias = de_dz_foward * self.backtivate(self.z)
         #print(f"delta bias: {delta_bias.shape} vs my bias: {self.bias.shape}")
@@ -61,6 +100,7 @@ class Node():
         return delta_bias, delta_weight, np.dot(self.weight.T, delta_bias) #last is de_dz for next layer down
 
     def update(self, delta_bias, delta_weight):
+        '''Update the weights and biases by subtraction.'''
         self.bias -= delta_bias
         self.weight -= delta_weight
 
