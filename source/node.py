@@ -38,8 +38,6 @@ class Node():
         return self.weight.shape
 
     def feed(self, input):
-        #TODO:
-        # add linear synapsing
         if self.normalize_label:
             input = self.normalize(input)
         self.input = input

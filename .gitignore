@@ -1,3 +1,4 @@
 *.pyc
 datasets/*
-*.wn
+models/*
+test.txt
