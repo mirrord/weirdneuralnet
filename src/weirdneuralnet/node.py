@@ -68,7 +68,7 @@ class Node():
         '''Get the shape of the weight matrix.'''
         return self.weight.shape
 
-    def feed(self, input):
+    def feed(self, input:np.array):
         '''Calculate the foward activation with some input.
         Inputs:
             input - the input matrix, which must be of shape (num features, num samples)
@@ -85,7 +85,7 @@ class Node():
         # print(f"output: {self.output}\n")
         return self.output
 
-    def backfeed(self, de_dz_foward):
+    def backfeed(self, de_dz_foward:np.array):
         '''Calculate the gradient descent signal from the backpropogated error signal.
         Inputs:
             de_dz_forward - the next layers' error signal
@@ -99,7 +99,7 @@ class Node():
         #print(f"db: {delta_bias.shape}, dw: {delta_weight.shape}")
         return delta_bias, delta_weight, np.dot(self.weight.T, delta_bias) #last is de_dz for next layer down
 
-    def update(self, delta_bias, delta_weight):
+    def update(self, delta_bias:np.array, delta_weight:np.array):
         '''Update the weights and biases by subtraction.'''
         self.bias -= delta_bias
         self.weight -= delta_weight

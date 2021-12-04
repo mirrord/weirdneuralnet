@@ -9,13 +9,48 @@ from pickle import Pickler, Unpickler
 
 
 class WeirdNetwork():
-    '''A gradient-descent NN of arbitrary topology.'''
+    '''A gradient descent NN of arbitrary topology.
+    Methods
+    --------
+    load (classmethod)
+        load a network instance from a saved model file.
+    save
+        save a network to a file.
+    compile
+        compile this network into a raw network with less overhead.
+    predict
+        compute forward propagation on some input.
+    get_last_output
+        retrieve the last-calculated output of this network.
+    backpropagate
+        calculate weight & bias updates based on input & expected output.
+    evaluate
+        compute the error cost of the network's prediction on some input & expected output.
+    train
+        train the network on some set of inputs and expected outputs for some number of epochs.'''
     def __init__(self,
                 node_params,
                 edges,
                 error_cost_func="diff_squares",
                 learning_rate=0.01,
                 regularize=(None, 0)):
+        '''Construct a WeirdNetwork NN.
+        Inputs
+            node_params
+                A list containing a dict for each node in the network. Each dict
+                must include at minimum: "x" (input dimension), "y" (output dimension),
+                and "activation". 
+            edges
+                a list of (int,int) tuples that describe the topology of the network
+                as a directed graph.
+            error_cost_func
+                a string label for the error cost function to be used.
+            learning_rate
+                the learning coefficient to be used during training.
+            regularize
+                a (str, int...) tuple that contains the string label for the
+                regularization function to be used during training and its parameters.
+        '''
         # node_params should be a list of dicts of node parameters
         # edges should be a list of node index tuples denoting connections between nodes
         self.nodes = []
@@ -45,7 +80,8 @@ class WeirdNetwork():
     #TODO: this is insecure and doesn't really work.
     #   implement a weirdnet-specific load & save.
     @classmethod
-    def load(cls, fname):
+    def load(cls, fname:str):
+        '''Load a WeirdNetwork model instance from a file.'''
         with open(fname, 'rb') as f:
             u = Unpickler(f)
             model = u.load()
@@ -54,16 +90,17 @@ class WeirdNetwork():
         model.regularize = REGULARIZATIONS.get(model.regularize_params[0], noreg)(model.regularize_params[1])
         return model
 
-    def save(self, fname, keep_history=False):
-        if not keep_history:
-            self.regularize = None
-            for node in self.nodes:
-                node.clear_history()
+    def save(self, fname:str):
+        '''Save a WeirdNetowrk model instance to a file.'''
+        self.regularize = None
+        for node in self.nodes:
+            node.clear_history()
         with open(fname, 'wb') as f:
             p = Pickler(f)
             return p.dump(self)
 
     def compile(self):
+        '''Build a raw NN from this object to remove the OO overhead.'''
         # only works for linear networks
         to_traverse = []
         to_traverse.extend(self.input_indices)
@@ -77,8 +114,15 @@ class WeirdNetwork():
             return weights, biases
         raise Exception("Output node is not fed")
 
-    def predict(self, input, debinarize=False):
-        '''input shape must be (features, samples)'''
+    def predict(self, input:np.array, debinarize=False):
+        '''Calculate this model's prediction for some input.
+        Inputs
+            input
+                the input vector. It must be of shape (features, samples).
+            debinarize
+                if set to True, return the output as a classifier integer
+                instead of a vector.
+        '''
         outputs = {}
         to_traverse = []
         #print(f"feed idxs: {self.feed_indices}")
@@ -107,10 +151,17 @@ class WeirdNetwork():
         raise Exception("Output node is not fed")
 
     def get_last_output(self):
+        '''Retrieve the last-calculated model output.'''
         return self.nodes[self.output_node].output
 
-    ##TODO: backprop, train, minibatch train, etc
-    def backpropagate(self, input, exp_output):
+    def backpropagate(self, input:np.array, exp_output:np.array):
+        '''Calculate weight & bias updates using gradient descent.
+        Inputs
+            input
+                vector on which to calculate error singal, shape (features, samples).
+            exp_output
+                vector to compare with model prediction, shape (binarized classes, samples).
+        '''
         num_sample = input.shape[1]
         predicted_output = self.predict(input)
         # print(f"output: {predicted_output.shape}")
@@ -141,10 +192,12 @@ class WeirdNetwork():
         wup = {i:w[1]/num_sample for i,w in backfeed.items()}
         return bup, wup
 
-    def evaluate(self, input, exp_out):
+    def evaluate(self, input:np.array, exp_out:np.array):
+        '''Calculate cost for some input & expected output.'''
         return self.cost(self.predict(input),exp_out)
 
-    def train(self, input, exp_output, epochs):
+    def train(self, input:np.array, exp_output:np.array, epochs:int):
+        '''train the network on some set of inputs and expected outputs for some number of epochs.'''
         #TODO: adapt to use a batch size
         cost_history = []
         for i in range(epochs):

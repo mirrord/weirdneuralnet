@@ -3,7 +3,7 @@
  * impl normalization [DONE]
  * impl regularization [DONE]
  * turn into a real package [DONE]
- * document existing code
+ * document existing code [DONE]
  * impl network compilation
  * impl unsupervised learning: clustering
     * centroid calc
