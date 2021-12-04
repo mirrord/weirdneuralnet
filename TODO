@@ -4,7 +4,7 @@
  * impl regularization [DONE]
  * turn into a real package [DONE]
  * document existing code [DONE]
- * impl network compilation
+ * impl network compilation [UNTESTED]
  * impl unsupervised learning: clustering
     * centroid calc
     * edge case calc

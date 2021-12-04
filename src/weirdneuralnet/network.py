@@ -214,3 +214,102 @@ class WeirdNetwork():
                     node.update(self.learning_rate*bup[idx], update_weights)
 
         return cost_history
+
+#TODO still need to test this
+# if it turns out this implementation is equivalent, I'll probably remove the OO
+# implementation. 
+class CompiledNetwork():
+    '''a topology-agnostic gradient descent NN with lower overhead.'''
+    def __init__(self,
+                weights,
+                biases,
+                edges,
+                activations,
+                normalizations,
+                input_idxs=[0],
+                output_idx=-1):
+        self.weights = weights
+        self.biases = biases
+        self.edges = edges
+        self.activation_lables = activations
+        self.activations = [ACTIVATIONS.get(act,(sigmoid, dsigmoid)) for act in activations]
+        self.normalization_params = normalizations
+        self.normalizations = [NORMALIZATIONS.get(norm, nonorm) for norm in normalizations]
+        self.inputs = {}
+        self.outputs = {}
+        self.zs = {}
+        self.feed_indices = [[edge[1] for edge in edges if edge[0]==idx] for idx in range(len(weights))]
+        self.backfeed_indices = [[edge[0] for edge in edges if edge[1]==idx] for idx in range(len(weights))]
+        self.input_nodes = input_idxs
+        self.output_node = output_idx if output_idx is not -1 else len()
+
+    def predict(self, input:np.array):
+        '''Calculate this model's prediction for some input.
+        Inputs
+            input
+                the input vector. It must be of shape (features, samples).
+        '''
+        outputs = {}
+        to_traverse = []
+        for idx in self.input_indices:
+            self.inputs[idx] = input
+            if self.normalize_label:
+                self.inputs[idx] = self.normalize(input)
+            self.zs[idx] = np.dot(self.weights[idx], self.inputs[idx]) + self.bias[idx]
+            self.outputs[idx] = self.activations[idx][0](self.zs[idx])
+            to_traverse.extend(self.feed_indices[idx])
+        for idx in to_traverse:
+            if idx not in outputs:
+                #find outputs this node wants as input
+                inputs = [self.nodes[i].get_output() for i in self.backfeed_indices[idx]]
+                #"synapse" them together
+                self.inputs[idx] = sum(inputs)
+                if self.normalize_label:
+                    self.inputs[idx] = self.normalize(self.inputs[idx])
+                self.zs[idx] = np.dot(self.weights[idx], self.inputs[idx]) + self.bias[idx]
+                self.outputs[idx] = self.activations[idx][0](self.zs[idx])
+                to_traverse.extend([fidx for fidx in self.feed_indices[idx] if fidx not in outputs])
+        if self.output_node in self.outputs:
+            return self.outputs[self.output_node]
+        raise Exception("Output node is not fed")
+        
+    def backprop(self, 
+                input, 
+                expout,
+                derror_func=ddiff_squares,
+                ):
+        '''Calculate weight & bias updates using gradient descent.
+        Inputs
+            input
+                vector on which to calculate error singal, shape (features, samples).
+            exp_output
+                vector to compare with model prediction, shape (binarized classes, samples).
+        '''
+        num_sample = input.shape[1]
+        backfeed = {}
+        de_dz = derror_func(self.predict(input), expout)
+        backfeed[self.output_node][0] = de_dz * self.activations[self.output_node][1](self.zs[self.output_node])
+        backfeed[self.output_node][1] = np.dot(backfeed[self.output_node][0], self.inputs[self.output_node].T)
+        backfeed[self.output_node][2] = np.dot(self.weights[self.output_node].T, backfeed[self.output_node][0])
+        to_traverse = self.backfeed_indices.get(self.output_node, []).copy()
+        for idx in to_traverse:
+            error_signal_components = [backfeed.get(oidx, (0,0,0)) for oidx in self.feed_indices[idx]]
+            de = sum([i[2] for i in error_signal_components])
+            db = de_dz * self.activations[idx][1](self.zs[idx])
+            dw = np.dot(backfeed[idx][0], self.inputs[idx].T)
+            de = np.dot(self.weights[idx].T, backfeed[idx][0])
+            db, dw, de = self.nodes[idx].backfeed(de)
+            if idx not in backfeed:
+                backfeed[idx] = db, dw, de
+            else:
+                backfeed[idx][0]+=db
+                backfeed[idx][1]+=dw
+                backfeed[idx][2]+=de
+
+            for jdx in self.backfeed_indices[idx]:
+                if jdx not in to_traverse:
+                    to_traverse.append(jdx)
+
+        bup = {i:np.sum(b[0],1,keepdims=True)/num_sample for i,b in backfeed.items()}
+        wup = {i:w[1]/num_sample for i,w in backfeed.items()}
+        return bup, wup
