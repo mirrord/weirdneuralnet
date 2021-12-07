@@ -13,7 +13,9 @@ from .network import WeirdNetwork
 from .node_utils import binarize
 
 def get_dataset(path):
-    #TODO: fix pathing
+    #TODO: add more datasets, or a better way to include more
+    # not really sure how best to do this yet
+    path = os.path.join(os.path.join(os.path.dirname(__file__), '../..'), path)
     def fetch(url):
         fp = os.path.join(path, hashlib.md5(url.encode('utf-8')).hexdigest())
         if os.path.isfile(fp):
@@ -55,7 +57,7 @@ def get_accuracy(model, X, Y):
 
 def train(model, epochs, acc_threshold, graph_it):
     #fetch data
-    X_train, Y_train, X_test, Y_test, X_val, Y_val = get_dataset(r'C:\Users\19082\Desktop\dev projects\python\ai\weirdneuralnet\datasets')
+    X_train, Y_train, X_test, Y_test, X_val, Y_val = get_dataset('datasets')
 
     print("train(): accuracy threshold not implemented yet")
 
