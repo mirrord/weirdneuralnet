@@ -72,35 +72,10 @@ def train(model, epochs, acc_threshold, graph_it):
     return model
 
 def build_model(fname):
-    # import json
-    # with open(fname, 'r') as f:
-    #     config = json.load(f.read())
-    print("build_model is not implemented yet")
-    node_params =[
-        {
-            'x':28*28,
-            'y':128,
-            'activation': 'sigmoid',
-            'input':True
-        },
-        {
-            'x':128,
-            'y':128,
-            'activation': 'sigmoid',
-        },
-        {
-            'x':128,
-            'y':10,
-            'activation': 'sigmoid',
-            'output':True
-        }
-    ]
-    edges = [
-        (0,1),
-        (0,2),
-        (1,2)
-    ]
-    return WeirdNetwork(node_params, edges)
+    import json
+    with open(fname, 'r') as f:
+        config = json.load(f)
+    return WeirdNetwork.create_from_config(config)
 
 def run(model, inp_fname):
     with open(inp_fname, 'rb') as f:

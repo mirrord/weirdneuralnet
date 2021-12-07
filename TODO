@@ -4,7 +4,7 @@
  * impl regularization [DONE]
  * turn into a real package [DONE]
  * document existing code [DONE]
- * impl network compilation [UNTESTED]
+ * impl network compilation [UNTESTED, INCOMPLETE]
  * impl network parameters config file
  * impl batch training
  * impl unsupervised learning: clustering

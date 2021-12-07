@@ -77,8 +77,6 @@ class WeirdNetwork():
     def __str__(self):
         return f"<WeirdNetwork size={len(self.nodes)} nodes>"
 
-    #TODO: this is insecure and doesn't really work.
-    #   implement a weirdnet-specific load & save.
     @classmethod
     def load(cls, fname:str):
         '''Load a WeirdNetwork model instance from a file.'''
@@ -89,6 +87,17 @@ class WeirdNetwork():
             node.reload()
         model.regularize = REGULARIZATIONS.get(model.regularize_params[0], noreg)(model.regularize_params[1])
         return model
+
+    @classmethod
+    def create_from_config(cls, json_config):
+        return cls(
+            json_config["node_params"],
+            json_config["edges"],
+            json_config.get("cost function", "diff_squares"),
+            json_config.get("learning rate", 0.01),
+            (json_config.get("regularization function", None),
+                json_config.get("regularization parameter", 0))
+        )
 
     def save(self, fname:str):
         '''Save a WeirdNetowrk model instance to a file.'''
