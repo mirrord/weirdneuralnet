@@ -2,3 +2,4 @@
 datasets/*
 models/*
 test.txt
+*.egg-info

@@ -35,10 +35,10 @@ def dtanh(x):
     return 1-(t*t)
 
 def softmax(x):
-    s = np.max(x, axis=1)
+    s = np.max(x, axis=0)
     s = s[:, np.newaxis] # necessary step to do broadcasting
     e_x = np.exp(x - s)
-    div = np.sum(e_x, axis=1)
+    div = np.sum(e_x, axis=0)
     div = div[:, np.newaxis] # ditto
     return e_x / div
 def dsoftmax(x):
@@ -97,10 +97,10 @@ COSTS = {
 }
 ## regularization functions
 def ridge_reg(lamb):
-    return lambda w: lamb*np.sum(np.abs(w))
+    return lambda w: lamb*np.sum(np.abs(w)).item()
 def lasso_reg(lamb):
     #generally considered to be more accurate and slower
-    return lambda w: lamb*np.sum(np.square(w))
+    return lambda w: lamb*np.sum(np.square(w)).item()
 def elastic_reg(alpha):
     L1 = ridge_reg(1-alpha)
     L2 = lasso_reg(alpha)
@@ -122,13 +122,13 @@ REGULARIZATIONS = {
 
 ## normalization & standardization functions
 def minmax_normalize(x):
-    min = np.min(x)
-    return (x-min)/(np.max(x)-min)
+    min = np.min(x).item()
+    return (x-min)/(np.max(x).item()-min)
 def minmaxneg_normalize(x):
-    min = np.min(x)
-    return 2*(x-min)/(np.max(x)-min) -1
+    min = np.min(x).item()
+    return 2*(x-min)/(np.max(x).item()-min) -1
 def meanstd_standardize(x):
-    return (x-np.mean(x))/np.std(x)
+    return (x-np.mean(x).item())/np.std(x).item()
 
 def nonorm(x):
     return x
@@ -147,7 +147,7 @@ def classic_net_predict(weights, biases, input):
         # print(f"calculating: {w.shape} . {input.shape}")
         # print(f"weight: {w}\n")
         # print(f"input: {input}\n")
-        input = sigmoid(np.dot(w, input)+b)
+        input = sigmoid(np.dot(input, w)+b)
         # print(f"\t=> {input.shape}")
         # print(f"output: {input}")
     return input
@@ -158,7 +158,7 @@ def classic_net_backprop(weights, biases, input, exp_out):
     activations = [input] # list to store all the activations, layer by layer
     zs = [] # list to store all the z vectors, layer by layer
     for b, w in zip(biases, weights):
-        zs.append(np.dot(w, activations[-1])+b)
+        zs.append(np.dot(activations[-1], w)+b)
         activations.append(sigmoid(zs[-1]))
 
     #error calc
@@ -173,11 +173,11 @@ def classic_net_backprop(weights, biases, input, exp_out):
     nabla_w = [np.zeros(w.shape) for w in weights]
     nabla_b[-1] = delta
     # print(f"first weight = de {delta.shape} . {activations[-2].T.shape}")
-    nabla_w[-1] = np.dot(delta, activations[-2].T)
+    nabla_w[-1] = np.dot(activations[-2].T, delta)
     for l in range(2, len(weights)+1):
-        nabla_b[-l] = np.dot(weights[-l+1].T, nabla_b[-l+1]) * dsigmoid(zs[-l])
+        nabla_b[-l] = np.dot(nabla_b[-l+1], weights[-l+1].T) * dsigmoid(zs[-l])
         # print(f"db[{-l}] {nabla_b[-l].shape} = (weight.T {weights[-l+1].T.shape} . de {nabla_b[-l+1].shape}) * dsig")
-        nabla_w[-l] = np.dot(nabla_b[-l], activations[-l-1].T)
+        nabla_w[-l] = np.dot(activations[-l-1].T, nabla_b[-l])
         # print(f"dw[{-l}] {nabla_w[-l].shape} = db {nabla_b[-l].shape} . output[{2-l-1}] {activations[-l-1].T.shape})")
     # print(nabla_w[0])
     return (nabla_b, nabla_w)

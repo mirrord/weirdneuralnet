@@ -146,7 +146,7 @@ class WeirdNetwork():
             #print(f"taking output from output node {self.output_node}")
             #print(f"prediction output: {outputs[self.output_node].shape}")
             if debinarize:
-                return outputs[self.output_node].argmax(axis=0)
+                return outputs[self.output_node].argmax(axis=1)
             return outputs[self.output_node]
         raise Exception("Output node is not fed")
 
@@ -162,7 +162,7 @@ class WeirdNetwork():
             exp_output
                 vector to compare with model prediction, shape (binarized classes, samples).
         '''
-        num_sample = input.shape[1]
+        num_sample = input.shape[0]
         predicted_output = self.predict(input)
         # print(f"output: {predicted_output.shape}")
         backfeed = {}
@@ -188,7 +188,7 @@ class WeirdNetwork():
                 if jdx not in to_traverse:
                     to_traverse.append(jdx)
 
-        bup = {i:np.sum(b[0],1,keepdims=True)/num_sample for i,b in backfeed.items()}
+        bup = {i:np.sum(b[0],0,keepdims=True)/num_sample for i,b in backfeed.items()}
         wup = {i:w[1]/num_sample for i,w in backfeed.items()}
         return bup, wup
 
@@ -202,7 +202,7 @@ class WeirdNetwork():
         cost_history = []
         for i in range(epochs):
             print(f"epoch {i}...") #TODO: use progress bar instead
-            shuffle_in_unison(input.T, exp_output.T)
+            shuffle_in_unison(input, exp_output)
             bup, wup = self.backpropagate(input, exp_output)
             cost_history.append(self.cost(self.get_last_output(), exp_output))
             #update
