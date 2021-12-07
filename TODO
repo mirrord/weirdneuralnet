@@ -5,6 +5,7 @@
  * turn into a real package [DONE]
  * document existing code [DONE]
  * impl network compilation [UNTESTED]
+ * impl network parameters config file
  * impl batch training
  * impl unsupervised learning: clustering
     * centroid calc
