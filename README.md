@@ -5,7 +5,7 @@ WeirdNeuralNet is a neural network library for exploring new topologies and trai
 ## CLI
 train a new Weird Network from scratch on the command line:
 ```
-C:/users/JohnCleese> python -m weirdneuralnet --config not_implemented_yet.cfg --train --epochs 100 --graph --save my_model.wnn
+C:/users/JohnCleese> python -m weirdneuralnet --config network.cfg --train --epochs 100 --graph --save my_model.wnn
 ```
 ![example training cost plot](blob/Figure_1.jpg?raw=true)
 

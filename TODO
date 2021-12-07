@@ -6,7 +6,7 @@
  * document existing code [DONE]
  * impl network compilation [UNTESTED, INCOMPLETE]
  * impl network parameters config file [DONE]
- * impl batch training
+ * impl batch training [DONE]
  * impl unsupervised learning: clustering
     * centroid calc
     * edge case calc

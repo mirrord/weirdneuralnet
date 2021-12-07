@@ -205,22 +205,27 @@ class WeirdNetwork():
         '''Calculate cost for some input & expected output.'''
         return self.cost(self.predict(input),exp_out)
 
-    def train(self, input:np.array, exp_output:np.array, epochs:int):
+    def train(self, input:np.array, exp_output:np.array, epochs:int, batch_size=-1):
         '''train the network on some set of inputs and expected outputs for some number of epochs.'''
-        #TODO: adapt to use a batch size
         cost_history = []
+        num_samples = len(exp_output)
+        batch_size = num_samples if batch_size == -1 else batch_size
         for i in range(epochs):
             print(f"epoch {i}...") #TODO: use progress bar instead
             shuffle_in_unison(input, exp_output)
-            bup, wup = self.backpropagate(input, exp_output)
-            cost_history.append(self.cost(self.get_last_output(), exp_output))
-            #update
-            for idx, node in enumerate(self.nodes):
-                if idx in wup:
-                    update_weights = self.learning_rate*wup[idx]
-                    if self.regularize_params[0] is not None:
-                        update_weights+=self.regularize(wup)
-                    node.update(self.learning_rate*bup[idx], update_weights)
+            cur_idx=0
+            while cur_idx < num_samples:
+                end_idx = cur_idx+batch_size
+                bup, wup = self.backpropagate(input[cur_idx:end_idx], exp_output[cur_idx:end_idx])
+                #update
+                for idx, node in enumerate(self.nodes):
+                    if idx in wup:
+                        update_weights = self.learning_rate*wup[idx]
+                        if self.regularize_params[0] is not None:
+                            update_weights+=self.regularize(wup)
+                        node.update(self.learning_rate*bup[idx], update_weights)
+                cur_idx+=batch_size
+            cost_history.append(self.cost(self.get_last_output(), exp_output[cur_idx-batch_size:end_idx]))
 
         return cost_history
 
@@ -252,6 +257,8 @@ class CompiledNetwork():
         self.input_nodes = input_idxs
         self.output_node = output_idx if output_idx is not -1 else len()
 
+    #TODO: implement compiled training
+
     def predict(self, input:np.array):
         '''Calculate this model's prediction for some input.
         Inputs
@@ -264,7 +271,7 @@ class CompiledNetwork():
             self.inputs[idx] = input
             if self.normalize_label:
                 self.inputs[idx] = self.normalize(input)
-            self.zs[idx] = np.dot(self.weights[idx], self.inputs[idx]) + self.bias[idx]
+            self.zs[idx] = np.dot(self.inputs[idx], self.weights[idx]) + self.bias[idx]
             self.outputs[idx] = self.activations[idx][0](self.zs[idx])
             to_traverse.extend(self.feed_indices[idx])
         for idx in to_traverse:
@@ -275,7 +282,7 @@ class CompiledNetwork():
                 self.inputs[idx] = sum(inputs)
                 if self.normalize_label:
                     self.inputs[idx] = self.normalize(self.inputs[idx])
-                self.zs[idx] = np.dot(self.weights[idx], self.inputs[idx]) + self.bias[idx]
+                self.zs[idx] = np.dot(self.inputs[idx], self.weights[idx]) + self.bias[idx]
                 self.outputs[idx] = self.activations[idx][0](self.zs[idx])
                 to_traverse.extend([fidx for fidx in self.feed_indices[idx] if fidx not in outputs])
         if self.output_node in self.outputs:
@@ -298,15 +305,15 @@ class CompiledNetwork():
         backfeed = {}
         de_dz = derror_func(self.predict(input), expout)
         backfeed[self.output_node][0] = de_dz * self.activations[self.output_node][1](self.zs[self.output_node])
-        backfeed[self.output_node][1] = np.dot(backfeed[self.output_node][0], self.inputs[self.output_node].T)
-        backfeed[self.output_node][2] = np.dot(self.weights[self.output_node].T, backfeed[self.output_node][0])
+        backfeed[self.output_node][1] = np.dot(self.inputs[self.output_node].T, backfeed[self.output_node][0])
+        backfeed[self.output_node][2] = np.dot(backfeed[self.output_node][0], self.weights[self.output_node].T)
         to_traverse = self.backfeed_indices.get(self.output_node, []).copy()
         for idx in to_traverse:
             error_signal_components = [backfeed.get(oidx, (0,0,0)) for oidx in self.feed_indices[idx]]
             de = sum([i[2] for i in error_signal_components])
             db = de_dz * self.activations[idx][1](self.zs[idx])
-            dw = np.dot(backfeed[idx][0], self.inputs[idx].T)
-            de = np.dot(self.weights[idx].T, backfeed[idx][0])
+            dw = np.dot(self.inputs[idx].T, backfeed[idx][0])
+            de = np.dot(backfeed[idx][0], self.weights[idx].T)
             db, dw, de = self.nodes[idx].backfeed(de)
             if idx not in backfeed:
                 backfeed[idx] = db, dw, de
@@ -319,6 +326,6 @@ class CompiledNetwork():
                 if jdx not in to_traverse:
                     to_traverse.append(jdx)
 
-        bup = {i:np.sum(b[0],1,keepdims=True)/num_sample for i,b in backfeed.items()}
+        bup = {i:np.sum(b[0],0,keepdims=True)/num_sample for i,b in backfeed.items()}
         wup = {i:w[1]/num_sample for i,w in backfeed.items()}
         return bup, wup
