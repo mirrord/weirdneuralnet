@@ -54,7 +54,7 @@ def get_accuracy(model, X, Y):
 
 def train(model, epochs, acc_threshold, graph_it):
     #fetch data
-    X_train, Y_train, X_test, Y_test, X_val, Y_val = get_dataset('./datasets/')
+    X_train, Y_train, X_test, Y_test, X_val, Y_val = get_dataset(r'C:\Users\19082\Desktop\dev projects\python\ai\weirdneuralnet\datasets')
 
     print("train(): accuracy threshold not implemented yet")
 
