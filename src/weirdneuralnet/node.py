@@ -37,8 +37,8 @@ class Node():
         '''
         #TODO: impl initialization strats
         # currently using Xavier
-        self.bias = np.random.randn(output_dim, 1)
-        self.weight = np.random.randn(output_dim, input_dim) * np.sqrt(1/(input_dim+output_dim))
+        self.bias = np.random.randn(1, output_dim)
+        self.weight = np.random.randn(input_dim, output_dim) * np.sqrt(1/(input_dim+output_dim))
         self.activate, self.backtivate = ACTIVATIONS.get(activation, no_activation)
         self.normalize_label, self.normalize = normalize, NORMALIZATIONS.get(normalize, nonorm)
         self.activation_label = activation
@@ -76,7 +76,7 @@ class Node():
         if self.normalize_label:
             input = self.normalize(input)
         self.input = input
-        self.z = np.dot(self.weight, input) + self.bias
+        self.z = np.dot(input, self.weight) + self.bias
         #print(f"activation: {self.activate}")
         self.output = self.activate(self.z)
         #print(f"δ({self.weight.shape} . {input.shape} + {self.bias.shape}) = {self.output.shape}")
@@ -94,10 +94,10 @@ class Node():
         delta_bias = de_dz_foward * self.backtivate(self.z)
         #print(f"delta bias: {delta_bias.shape} vs my bias: {self.bias.shape}")
         #print(f"calculating: bias {delta_bias.shape} . input.T {self.input.T.shape}")
-        delta_weight = np.dot(delta_bias, self.input.T)
+        delta_weight = np.dot(self.input.T, delta_bias)
         #print(f"delta weight: {delta_weight.shape} vs my weight: {self.weight.shape}")
         #print(f"db: {delta_bias.shape}, dw: {delta_weight.shape}")
-        return delta_bias, delta_weight, np.dot(self.weight.T, delta_bias) #last is de_dz for next layer down
+        return delta_bias, delta_weight, np.dot(delta_bias, self.weight.T) #last is de_dz for next layer down
 
     def update(self, delta_bias:np.array, delta_weight:np.array):
         '''Update the weights and biases by subtraction.'''

@@ -13,6 +13,7 @@ from .network import WeirdNetwork
 from .node_utils import binarize
 
 def get_dataset(path):
+    #TODO: fix pathing
     def fetch(url):
         fp = os.path.join(path, hashlib.md5(url.encode('utf-8')).hexdigest())
         if os.path.isfile(fp):
@@ -27,7 +28,7 @@ def get_dataset(path):
 
     X = fetch("http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz")[0x10:].reshape((-1, 28, 28))
     Y = fetch("http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz")[8:]
-    X_test = fetch("http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz")[0x10:].reshape((-1, 28*28)).T
+    X_test = fetch("http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz")[0x10:].reshape((-1, 28*28))
     Y_test = fetch("http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz")[8:]
 
     #Validation split
@@ -41,20 +42,20 @@ def get_dataset(path):
     X_train,X_val=X[train_no,:,:],X[val_no,:,:]
     Y_train,Y_val=Y[train_no],Y[val_no]
     #reshape
-    X_train = X_train.reshape((-1,28*28)).T
-    X_val = X_val.reshape((-1,28*28)).T
+    X_train = X_train.reshape((-1,28*28))
+    X_val = X_val.reshape((-1,28*28))
     
-    Y_train, Y_val, Y_test = binarize(Y_train, 10).T, binarize(Y_val, 10).T, binarize(Y_test, 10).T
+    Y_train, Y_val, Y_test = binarize(Y_train, 10), binarize(Y_val, 10), binarize(Y_test, 10)
     return X_train, Y_train, X_test, Y_test, X_val, Y_val
 
 def get_accuracy(model, X, Y):
     prediction_classes = model.predict(X, debinarize=True)
-    num_correct = np.where(np.equal(prediction_classes, Y.argmax(axis=0)))[0].shape[0]
+    num_correct = np.where(np.equal(prediction_classes, Y.argmax(axis=1)))[0].shape[0]
     return num_correct, len(prediction_classes)
 
 def train(model, epochs, acc_threshold, graph_it):
     #fetch data
-    X_train, Y_train, X_test, Y_test, X_val, Y_val = get_dataset('./datasets/')
+    X_train, Y_train, X_test, Y_test, X_val, Y_val = get_dataset(r'C:\Users\19082\Desktop\dev projects\python\ai\weirdneuralnet\datasets')
 
     print("train(): accuracy threshold not implemented yet")
 
