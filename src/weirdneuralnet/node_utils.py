@@ -67,7 +67,7 @@ ACTIVATIONS ={
 ## cost functions
 def diff_squares(y, y_true):
     #print(f"diff squares of: {y.shape} - {y_true.shape}")
-    return np.sum(np.square(y-y_true))
+    return np.sum(np.square(y-y_true)).item()
 def ddiff_squares(y, y_true):
     return 2*(y-y_true)
 
@@ -77,12 +77,12 @@ def dquadratic(y, y_true):
     return y-y_true
 
 def cross_entropy(y, y_true):
-    return -1*np.sum( y_true*np.log(y) + (1-y_true)*np.log(1-y) )
+    return -1*np.sum( y_true*np.log(y) + (1-y_true)*np.log(1-y) ).item()
 def dcross_entropy(y, y_true):
     return (y-y_true)/(y*(1-y))
 
 def hellinger(y, y_true):
-    return 0.70710678*np.sum( np.square(np.sqrt(y)-np.sqrt(y_true)) )
+    return 0.70710678*np.sum( np.square(np.sqrt(y)-np.sqrt(y_true)) ).item()
 def dhellinger(y, y_true):
     rooty = np.sqrt(y)
     return (rooty - np.sqrt(y_true))/(1.41421356*rooty)
