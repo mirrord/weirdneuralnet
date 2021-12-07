@@ -44,14 +44,13 @@ def dbscan(vec):
     return db.labels_, db.core_sample_indices_
 
 def centroids(X, labels, num_classes):
-    num_features = X.shape[0]
-    centroids = np.zeros((num_features, num_classes))
+    centroids = np.zeros((X.shape[0], num_classes))
     for cls in range(num_classes):
-        centroids[:, cls] = X[:,np.nonzero(labels==cls)[0]].mean(axis=1)
+        centroids[cls, :] = X[labels==cls, :].mean(axis=0)
     return centroids
 
 def calc_distances(X):
     distances = np.empty(X.shape)
-    for i in range(X.shape[1]):
-        distances[:,i] = np.abs(np.broadcast_to(X[:,i], X.T.shape).T - X).sum(axis=0)
+    for i in range(X.shape[0]):
+        distances[i,:] = np.abs(np.broadcast_to(X[i,:], X.shape) - X).sum(axis=1)
     return distances
