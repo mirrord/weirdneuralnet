@@ -7,10 +7,11 @@
  * impl network compilation [UNTESTED, INCOMPLETE]
  * impl network parameters config file [DONE]
  * impl batch training [DONE]
- * impl unsupervised learning: clustering
+ * impl unsupervised learning: clustering [DONE]
     * centroid calc
     * edge case calc
-    * unsupervised training types
+    * unsupervised training types [kmeans & agglomerative]
+ * implement more dataset usage
  * impl transfer training
  * impl some experiments
  * clean up CLI
