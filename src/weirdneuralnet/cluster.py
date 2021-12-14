@@ -19,6 +19,14 @@ def agglom(vec, num_clusters, link_type):
     clf.fit(v, y_predict)
     return np.array(agglo.labels_), np.array(clf.centroids_)
 
+CLUSTER_FUNCS = {
+        "kmeans": lambda x,n: kmeans(x,n),
+        "agglom ward": lambda x,n: agglom(x,n,"ward"),
+        "agglom average": lambda x,n: agglom(x,n,"average"),
+        "agglom complete": lambda x,n: agglom(x,n,"complete"),
+        "agglom single": lambda x,n: agglom(x,n,"single"),
+    }
+
 def centroids(X, labels, num_classes):
     centroids = np.zeros((X.shape[0], num_classes))
     for cls in range(num_classes):
@@ -37,11 +45,12 @@ def calc_distances(p0, points):
 def get_furthest(p0, points):
     return np.argmax(calc_distances(p0, points)).astype(int)
 
-def get_edge_points(centroids, point_set):
+#TODO: impl a better way to get edge points, this is dumb
+def get_far_points(centroids, point_set, point_labels):
     edge_points = np.zeros(len(centroids))
     for idx, centroid in enumerate(centroids):
-        edge_points[idx] = get_furthest(centroid, point_set)
-    return edge_points
+        edge_points[idx] = get_furthest(centroid, point_set[point_labels==idx])
+    return edge_points.astype(int)
 
 ####
 # under construction

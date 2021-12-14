@@ -2,6 +2,7 @@
 import os
 import hashlib, requests, gzip
 import argparse
+from tqdm import trange
 
 import matplotlib.pyplot as plt
 
@@ -9,7 +10,7 @@ import matplotlib.pyplot as plt
 import cupy as np
 from numpy import frombuffer, setdiff1d
 
-from .network import WeirdNetwork
+from .network import WeirdNetwork, prime_typea, prime_typeb, prime_typec
 from .node_utils import binarize
 
 def get_dataset(path):
@@ -68,6 +69,9 @@ def train(model, epochs, acc_threshold, graph_it):
     print(f"total test samples: {total}\nnumber correct: {correct}\naccuracy: {correct/total}")
 
     if graph_it:
+        plt.title("training progression")
+        plt.ylabel("cost")
+        plt.xlabel("epoch")
         plt.plot(list(range(epochs)), cost_history)
         plt.show()
 
@@ -86,11 +90,49 @@ def run(model, inp_fname):
         buffer = f.read()
     return model.predict(buffer)
 
-def experiment():
-    print("not implemented yet")
+def baseline(config, samples, training_type="normal", prime_epochs=1):
+    print(f"constructing baseline with training type \"{training_type}\"...")
+    epochs = 30
+    results = []
+    for i in trange(samples, desc="conducting experiments..."):
+        X_train, Y_train, X_test, Y_test, X_val, Y_val = get_dataset('datasets')
+        model = build_model(config)
+        epochs_done = prime_epochs
+        if training_type == "primeA":
+            cost_history = prime_typea(model, X_train, "kmeans", 10, prime_epochs)
+        elif training_type == "primeB":
+            cost_history = prime_typeb(model, X_train, "kmeans", 10, prime_epochs)
+        elif training_type == "primeC":
+            cost_history = prime_typec(model, X_train, Y_train, "kmeans", 10, prime_epochs)
+        else:
+            epochs_done = 0
+            cost_history = []
+        cost_history.extend(model.train(X_train, Y_train, epochs-epochs_done))
+        plt.plot(list(range(epochs)), cost_history)
+        acc_train = get_accuracy(model, X_train, Y_train)
+        acc_test = get_accuracy(model, X_test, Y_test)
+        results.append(str((acc_train[0]/acc_train[1], acc_test[0]/acc_test[1])))
+
+    feed="\n\t".join(results)
+    print(f"training vs. validation results: \n\t{feed}")
+    plt.title(f"{training_type} training progression")
+    plt.ylabel("cost")
+    plt.xlabel("epoch")
+    plt.show()
+
+def experiment(config, samples=10):
+    prime_epochs = 10
+    baseline(config, samples, "normal")
+    # baseline(config, samples, "primeA", prime_epochs)
+    # baseline(config, samples, "primeB", prime_epochs)
+    # baseline(config, samples, "primeC", prime_epochs)
+    
 
 def play():
     print("this space reserved for *really* weird experiments")
+
+
+
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser(description='Experiment with a WeirdNetwork.')
@@ -128,7 +170,7 @@ if __name__=="__main__":
             print(f"saving model at {args.save}")
             model.save(args.save)
     elif args.action == "experiment":
-        experiment()
+        experiment(args.config, args.epochs)
     elif args.action == "run":
         model = None
         if args.load:
