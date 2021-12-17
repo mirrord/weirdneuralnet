@@ -45,7 +45,7 @@ def calc_distances(p0, points):
 def get_furthest(p0, points):
     return np.argmax(calc_distances(p0, points)).astype(int)
 
-#TODO: impl a better way to get edge points, this is dumb
+#TODO: impl a better ways to get edge points
 def get_far_points(centroids, point_set, point_labels):
     edge_points = np.zeros(len(centroids))
     for idx, centroid in enumerate(centroids):

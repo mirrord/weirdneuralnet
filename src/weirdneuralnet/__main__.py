@@ -90,13 +90,13 @@ def run(model, inp_fname):
         buffer = f.read()
     return model.predict(buffer)
 
-def baseline(config, samples, training_type="normal", prime_epochs=1):
+def baseline(config, samples, training_type="normal", prime_epochs=1, epochs=30):
     print(f"constructing baseline with training type \"{training_type}\"...")
-    epochs = 30
     results = []
     for i in trange(samples, desc="conducting experiments..."):
         X_train, Y_train, X_test, Y_test, X_val, Y_val = get_dataset('datasets')
-        model = build_model(config)
+        #model = build_model(config)
+        model = WeirdNetwork.load(f"models\\model{i}.wm")
         epochs_done = prime_epochs
         if training_type == "primeA":
             cost_history = prime_typea(model, X_train, "kmeans", 10, prime_epochs)
@@ -114,15 +114,26 @@ def baseline(config, samples, training_type="normal", prime_epochs=1):
         results.append(str((acc_train[0]/acc_train[1], acc_test[0]/acc_test[1])))
 
     feed="\n\t".join(results)
-    print(f"training vs. validation results: \n\t{feed}")
+    with open(f"training_{training_type}_{epochs}epochs_{prime_epochs}prime.txt", "w") as f:
+        f.write(f"training vs. validation results: \n\t{feed}")
     plt.title(f"{training_type} training progression")
     plt.ylabel("cost")
     plt.xlabel("epoch")
-    plt.show()
+    path = "C:\\Users\\19082\\Desktop\\dev projects\\python\\ai\\experiment records\\big experiment"
+    plt.savefig(f"{path}\\training_{training_type}_{epochs}epochs_{prime_epochs}prime.png")
+    plt.close()
 
-def experiment(config, samples=10):
-    prime_epochs = 10
-    baseline(config, samples, "normal")
+def experiment(config, samples=100):
+    # for i in trange(samples):
+    #     m = build_model(config)
+    #     m.save(f"models/model{i}.wm")
+    for train_type in ["primeC"]:
+        for epochs in [50, 100]:
+            if train_type != "normal":
+                for prime_ratio in [0.1, 0.20, 0.5]:
+                    baseline(config, samples, train_type, int(prime_ratio*epochs), epochs)
+            else:
+                baseline(config, samples, train_type, 1, epochs)
     # baseline(config, samples, "primeA", prime_epochs)
     # baseline(config, samples, "primeB", prime_epochs)
     # baseline(config, samples, "primeC", prime_epochs)

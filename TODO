@@ -12,11 +12,15 @@
     * edge case calc
     * unsupervised training types [kmeans & agglomerative]
  * implement more dataset usage
- * impl progress bar instead of stdout reporting
- * impl priming [DONE, UNTESTED]
+ * impl progress bar instead of stdout reporting [DONE]
+ * impl priming [DONE]
     * priming A: pretrain with blind clusters
     * priming B: pretrain with blind cluster centroids & edge points
     * priming C: pretrain with nested cluster centroids & edge points from expected dataset
+ * implement subset selection methods
+    * random pick
+    * core subset
+    * LTS
  * break up experiments & package into separate modules
  * separate WeirdNet and basic NN
  * impl transfer training
