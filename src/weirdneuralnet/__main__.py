@@ -97,15 +97,20 @@ def baseline(config, samples, training_type="normal", prime_epochs=1, epochs=30)
         X_train, Y_train, X_test, Y_test, X_val, Y_val = get_dataset('datasets')
         #model = build_model(config)
         model = WeirdNetwork.load(f"models\\model{i}.wm")
-        epochs_done = prime_epochs
+        epochs_done = 0
         if training_type == "primeA":
-            cost_history = prime_typea(model, X_train, "kmeans", 10, prime_epochs)
+            new_X, new_Y = prime_typea(X_train, "kmeans", 10)
+            cost_history = model.train(new_X, new_Y, prime_epochs)
+            epochs_done = prime_epochs
         elif training_type == "primeB":
-            cost_history = prime_typeb(model, X_train, "kmeans", 10, prime_epochs)
+            new_X, new_Y = prime_typeb(X_train, "kmeans", 10)
+            cost_history = model.train(new_X, new_Y, prime_epochs)
+            epochs_done = prime_epochs
         elif training_type == "primeC":
-            cost_history = prime_typec(model, X_train, Y_train, "kmeans", 10, prime_epochs)
+            new_X, new_Y = prime_typec(X_train, Y_train, "kmeans", 10)
+            cost_history = model.train(new_X, new_Y, prime_epochs)
+            epochs_done = prime_epochs
         else:
-            epochs_done = 0
             cost_history = []
         cost_history.extend(model.train(X_train, Y_train, epochs-epochs_done))
         plt.plot(list(range(epochs)), cost_history)

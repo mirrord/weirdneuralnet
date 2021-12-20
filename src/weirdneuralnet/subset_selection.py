@@ -3,17 +3,19 @@ from .node_utils import binarize, debinarize
 from .cluster import *
 import cupy as np
 
-#TODO: these should return matrices and/or indices, not training!
+# subset selection functions return subset indices
+# subset construction functions return (points, labels)
 
-#NOTE: this is here for posterity. It sucks big time!
-def prime_typea(network, X, cluster_type, num_classes, epochs, batch_size=-1):
+############## Construction functions ##############
+#NOTE: prime type A is here for posterity. It sucks big time!
+def prime_typea(X, cluster_type, num_classes):
     # priming A: pretrain with blind clusters
     clust = CLUSTER_FUNCS[cluster_type]
     lables, _ = clust(X, num_classes)
     bin_labels = binarize(lables, num_classes)
-    return network.train(X, bin_labels, epochs, batch_size)
+    return X, bin_labels
 
-def prime_typeb(network, X, cluster_type, num_classes, epochs, batch_size=-1):
+def prime_typeb(X, cluster_type, num_classes):
     # priming B: pretrain with blind cluster centroids & edge points
     #NOTE: at present, we only grab twice the number of classes in points.
     # I should probably parameterize this.
@@ -28,9 +30,9 @@ def prime_typeb(network, X, cluster_type, num_classes, epochs, batch_size=-1):
     edge_idxs = get_far_points(new_data[:num_classes], X, labels)
     new_data[num_classes:] = X[edge_idxs]
     bin_labels = binarize(new_labels, num_classes)
-    return network.train(new_data, bin_labels, epochs, batch_size)
+    return new_data, bin_labels
 
-def prime_typec(network, X, labels, cluster_type, num_classes, epochs, nested_clusters=3, batch_size=-1):
+def prime_typec(X, labels, cluster_type, num_classes, nested_clusters=3):
     # priming C: pretrain with nested cluster centroids & edge points from expected dataset
     clust = CLUSTER_FUNCS[cluster_type]
     new_num_samples = num_classes*nested_clusters*2
@@ -49,4 +51,18 @@ def prime_typec(network, X, labels, cluster_type, num_classes, epochs, nested_cl
         new_data[idx+nested_clusters:next_idx] = class_samples[edge_idxs]
         new_labels[idx:next_idx] = i
     bin_labels = binarize(new_labels, num_classes)
-    return network.train(new_data, bin_labels, epochs, batch_size)
+    return new_data, bin_labels
+
+###########################
+
+############# Selection Functions ##############
+def random_equal_selection(labels, num_classes, samples_per_class):
+    '''randomly select a certain number of items in each class.'''
+    # labels should be debinarized
+    new_num_samples = num_classes*samples_per_class
+    sample_idxs = np.zeros(new_num_samples)
+    for i in range(num_classes):
+        class_samples = np.nonzero(labels==i)
+        sample_idxs[i*samples_per_class:(i+1)*samples_per_class] = \
+            class_samples[np.random.shuffle(np.arange(len(class_samples)))[:samples_per_class]]
+    return sample_idxs
