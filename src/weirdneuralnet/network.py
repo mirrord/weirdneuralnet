@@ -110,20 +110,45 @@ class WeirdNetwork():
             p = Pickler(f)
             return p.dump(self)
 
+    def connect_to_input(self, add_model, connection_idxs=[], replace_inputs=True):
+        if not connection_idxs:
+            connection_idxs = self.input_indices
+        num_nodes = len(self.nodes)
+        self.nodes.extend(add_model.nodes)
+        for x,y in add_model.edges:
+            self.edges.append((x+num_nodes, y+num_nodes))
+        for idx in connection_idxs:
+            self.edges.append(add_model.output_node+num_nodes, idx)
+            if idx in self.input_indices and replace_inputs:
+                self.input_indices.remove(idx)
+        self.input_indices.extend(add_model.input_indices)
+
+    def connect_to_output(self, add_model, connection_idxs=[], replace_inputs=True):
+        add_model.connect_to_input(self, connection_idxs, replace_inputs)
+        
+    def internal_connect(self, add_model, input_connections, output_connections):
+        num_nodes = len(self.nodes)
+        self.nodes.extend(add_model.nodes)
+        for edge in add_model.edges:
+            self.edges.append((edge[0]+num_nodes, edge[1]+num_nodes))
+        for x,y in input_connections:
+            self.edges.append((x+num_nodes, y))
+        for x,y in output_connections:
+            self.edges.append((x, y+num_nodes))
+
+
     def compile(self):
         '''Build a raw NN from this object to remove the OO overhead.'''
-        # only works for linear networks
-        to_traverse = []
-        to_traverse.extend(self.input_indices)
-        for idx in self.input_indices:
-            to_traverse.extend(self.feed_indices[idx])
-        for idx in to_traverse:
-            to_traverse.extend([fidx for fidx in self.feed_indices[idx] if fidx not in to_traverse])
-        if self.output_node in to_traverse:
-            weights = [self.nodes[nidx].weight for nidx in to_traverse]
-            biases = [self.nodes[nidx].bias for nidx in to_traverse]
-            return weights, biases
-        raise Exception("Output node is not fed")
+        weights = []
+        biases = []
+        activations = []
+        normalizations = []
+        for node in self.nodes:
+            weights.append(node.weight)
+            biases.append(node.biase)
+            activations.append(node.activation_label)
+            normalizations.append(node.normalize_label)
+        return CompiledNetwork(weights, biases, self.edges, activations, normalizations, self.input_indices, self.output_node)
 
     def predict(self, input:np.array, debinarize=False):
         '''Calculate this model's prediction for some input.
