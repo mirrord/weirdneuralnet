@@ -5,8 +5,8 @@
     * create graphics for experimental accuracy results
  * impl network compilation [UNTESTED, INCOMPLETE]
  * implement more dataset usage
+ * implement auto-regressive connections/training
  * implement dual-input node with scaling
- * implement masking
  * parameterize priming with number of far points
     * compare to other subset selection methods
  * implement subset selection methods
