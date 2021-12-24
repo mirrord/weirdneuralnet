@@ -1,29 +1,20 @@
 # TODO
- * impl a couple more activation functions [DONE]
- * impl normalization [DONE]
- * impl regularization [DONE]
- * turn into a real package [DONE]
- * document existing code [DONE]
+ * document existing code [REDO]
+ * write up experimental procedure and results [DONE, more work needed as below]
+ * re-run experiments using convergence target
+    * create graphics for experimental accuracy results
  * impl network compilation [UNTESTED, INCOMPLETE]
- * impl network parameters config file [DONE]
- * impl batch training [DONE]
- * impl unsupervised learning: clustering [DONE]
-    * centroid calc
-    * edge case calc
-    * unsupervised training types [kmeans & agglomerative]
  * implement more dataset usage
- * impl progress bar instead of stdout reporting [DONE]
- * impl priming [DONE]
-    * priming A: pretrain with blind clusters
-    * priming B: pretrain with blind cluster centroids & edge points
-    * priming C: pretrain with nested cluster centroids & edge points from expected dataset
+ * implement dual-input node with scaling
+ * implement masking
+ * parameterize priming with number of far points
+    * compare to other subset selection methods
  * implement subset selection methods
-    * random pick
+    * random pick [DONE]
     * core subset
     * LTS
  * break up experiments & package into separate modules
- * separate WeirdNet and basic NN
+ * implement model structure "DNA" encoding
  * impl transfer training
- * impl some experiments
  * clean up CLI
  * implement more initialization types

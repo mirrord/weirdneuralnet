@@ -6,6 +6,8 @@ from .cluster import *
 #import numpy as np
 import cupy as np
 from tqdm import trange
+from pathlib import Path
+import json
 
 from pickle import Pickler, Unpickler
 
@@ -91,7 +93,13 @@ class WeirdNetwork():
         return model
 
     @classmethod
-    def create_from_config(cls, json_config):
+    def create_from_config(cls, fname:Path):
+        with open(fname, 'r') as f:
+            config = json.load(f)
+        return cls.create_from_json(config)
+
+    @classmethod
+    def create_from_json(cls, json_config):
         return cls(
             json_config["node_params"],
             json_config["edges"],
