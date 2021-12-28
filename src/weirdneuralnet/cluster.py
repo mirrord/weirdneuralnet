@@ -42,14 +42,15 @@ def calc_distances(X):
 def calc_distances(p0, points):
     return np.square(p0 - points).sum(axis=1)
 
-def get_furthest(p0, points):
-    return np.argmax(calc_distances(p0, points)).astype(int)
+def get_furthest(p0, points, num_get):
+    nidx = -1*num_get
+    return np.argpartition(calc_distances(p0, points), nidx)[nidx:].astype(int)
 
 #TODO: impl a better ways to get edge points
-def get_far_points(centroids, point_set, point_labels):
-    edge_points = np.zeros(len(centroids))
+def get_far_points(centroids, point_set, point_labels, num_far=1):
+    edge_points = np.zeros(len(centroids)*num_far)
     for idx, centroid in enumerate(centroids):
-        edge_points[idx] = get_furthest(centroid, point_set[point_labels==idx])
+        edge_points[idx:idx+num_far] = get_furthest(centroid, point_set[point_labels==idx], num_far)
     return edge_points.astype(int)
 
 ####
