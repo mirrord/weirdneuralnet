@@ -52,8 +52,11 @@ def dswish(x):
     swishx = x*sigx
     return swishx+(sigx*(1-swishx))
 
+def scale_act(x):
+    return x/len(x)
+
 def no_activation(x):
-    raise Exception("activation function not found or not implemented")
+    return x
 
 ACTIVATIONS ={
     "sigmoid": (sigmoid, dsigmoid),
@@ -61,7 +64,8 @@ ACTIVATIONS ={
     "leaky relu": (leaky_relu, dleaky_relu),
     "tanh": (tanh, dtanh),
     "softmax": (softmax, dsoftmax),
-    "swish": (swish, dswish)
+    "swish": (swish, dswish),
+    "scaled": (scale_act, no_activation)
 }
 
 ## cost functions
@@ -144,17 +148,10 @@ NORMALIZATIONS = {
 ## reference functions
 def classic_net_predict(weights, biases, input):
     for b, w in zip(biases, weights):
-        # print(f"calculating: {w.shape} . {input.shape}")
-        # print(f"weight: {w}\n")
-        # print(f"input: {input}\n")
         input = sigmoid(np.dot(input, w)+b)
-        # print(f"\t=> {input.shape}")
-        # print(f"output: {input}")
     return input
 
 def classic_net_backprop(weights, biases, input, exp_out):
-    #TODO: turn this into a compiled NN class!
-    #forward prop while recording
     activations = [input] # list to store all the activations, layer by layer
     zs = [] # list to store all the z vectors, layer by layer
     for b, w in zip(biases, weights):
@@ -163,23 +160,16 @@ def classic_net_backprop(weights, biases, input, exp_out):
 
     #error calc
     delta = ddiff_squares(activations[-1], exp_out)
-    # print(f"\ndE = {delta.shape}")
 
     #gradient calc
-    # print(f"first de[-1] = {delta.shape} * dsig")
     delta = delta * dsigmoid(zs[-1])
-    # print(f"\t=> {delta.shape}")
     nabla_b = [np.zeros(b.shape) for b in biases]
     nabla_w = [np.zeros(w.shape) for w in weights]
     nabla_b[-1] = delta
-    # print(f"first weight = de {delta.shape} . {activations[-2].T.shape}")
     nabla_w[-1] = np.dot(activations[-2].T, delta)
     for l in range(2, len(weights)+1):
         nabla_b[-l] = np.dot(nabla_b[-l+1], weights[-l+1].T) * dsigmoid(zs[-l])
-        # print(f"db[{-l}] {nabla_b[-l].shape} = (weight.T {weights[-l+1].T.shape} . de {nabla_b[-l+1].shape}) * dsig")
         nabla_w[-l] = np.dot(activations[-l-1].T, nabla_b[-l])
-        # print(f"dw[{-l}] {nabla_w[-l].shape} = db {nabla_b[-l].shape} . output[{2-l-1}] {activations[-l-1].T.shape})")
-    # print(nabla_w[0])
     return (nabla_b, nabla_w)
 
 

@@ -14,14 +14,14 @@
    * LTS - maybe
  * implement model structure "DNA" encoding
  * impl transfer training
- * impl network compilation [INCOMPLETE] 
+ * impl network compilation [INCOMPLETE]
    * ...actually, this may not be reasonable
  * clean up CLI
  * implement more initialization types
 
 ### Experiments
  * write up experimental procedure and results [DONE]
-   * more work needed
+   * more work needed: images and more experiments
  * fix pretraining experiment functions [DONE]
  * re-run experiments using convergence target [UNTESTED]
     * create graphics for experimental accuracy results
