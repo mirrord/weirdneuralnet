@@ -2,6 +2,7 @@
 
 import argparse
 from tqdm import trange
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 
@@ -21,8 +22,8 @@ def train(model, epochs, acc_threshold, graph_it):
 
     cost_history = model.train(X_train, Y_train, epochs)
 
-    print(f"test error: {model.evaluate(X_test, Y_test)}")
     correct, total = get_accuracy(model, X_test, Y_test)
+    print(f"average test error: {model.evaluate(X_test, Y_test)/total}")
     print(f"total test samples: {total}\nnumber correct: {correct}\naccuracy: {correct/total}")
 
     if graph_it:
@@ -35,10 +36,7 @@ def train(model, epochs, acc_threshold, graph_it):
     return model
 
 def build_model(fname):
-    import json
-    with open(fname, 'r') as f:
-        config = json.load(f)
-    return WeirdNetwork.create_from_config(config)
+    return WeirdNetwork.create_from_config(Path(fname))
 
 def run(model, inp_fname):
     print("under construction: that file had better contain a matrix lol")

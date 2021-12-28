@@ -1,6 +1,6 @@
 
 
-from .node import Node
+from .node import DualNeuralNode, NeuralNode, Node
 from .node_utils import *
 from .cluster import *
 #import numpy as np
@@ -262,7 +262,7 @@ class WeirdNetwork():
             while cur_idx < num_samples:
                 end_idx = cur_idx+batch_size
                 predicted_output = self.predict(input[cur_idx:end_idx])
-                accuracy = np.where(np.equal(predicted_output, exp_output[cur_idx:end_idx].argmax(axis=1)))[0].shape[0] / batch_size
+                accuracy = np.where(np.equal(debinarize(predicted_output), exp_output[cur_idx:end_idx].argmax(axis=1)))[0].shape[0] / batch_size
                 bup, wup = self.backpropagate(exp_output[cur_idx:end_idx])
                 #update
                 for idx, node in enumerate(self.nodes):
@@ -281,8 +281,7 @@ class WeirdNetwork():
 
 
 #TODO still need to test this
-# if it turns out this implementation is equivalent, I'll probably remove the OO
-# implementation. 
+# ...and it's going to need a huge upgrade
 class CompiledNetwork():
     '''a topology-agnostic gradient descent NN with lower overhead.'''
     def __init__(self,
@@ -306,7 +305,7 @@ class CompiledNetwork():
         self.feed_indices = [[edge[1] for edge in edges if edge[0]==idx] for idx in range(len(weights))]
         self.backfeed_indices = [[edge[0] for edge in edges if edge[1]==idx] for idx in range(len(weights))]
         self.input_nodes = input_idxs
-        self.output_node = output_idx if output_idx is not -1 else len()
+        self.output_node = output_idx if output_idx != -1 else len(self.nodes)-1
 
     #TODO: implement compiled training
 
@@ -433,23 +432,42 @@ class WeirdNetworkV2():
         # edges should be a list of node index tuples denoting connections between nodes
         self.nodes = []
         self.input_indices = []
+        # which nodes feed into which input sites
         self.feed_indices = {}
+        # which input sites take input from which nodes
         self.backfeed_indices = {}
         self.output_node = 0
         self.learning_rate = learning_rate
         self.input, self.output = None, None
         self.regularize_params, self.regularize = regularize, REGULARIZATIONS.get(regularize[0], noreg)(regularize[1])
         self.cost, self.cost_deriv = COSTS.get(error_cost_func, (diff_squares, ddiff_squares))
+        self.edges = [edge if len(edge)==3 else (edge[0], edge[1], 0) for edge in edges]
         for idx, param in enumerate(node_params):
-            self.feed_indices[idx] = [edge[1] for edge in edges if edge[0]==idx]
-            self.backfeed_indices[idx] = [edge[0] for edge in edges if edge[1]==idx]
-            #print(f"backfeed idxs {idx}: {self.backfeed_indices[idx]}")
-            self.nodes.append(Node(param['x'], param['y'], param['activation']))
+            self.feed_indices[idx] = [(edge[1], edge[2]) for edge in edges if edge[0]==idx]
+            for outp, inp, site in edges:
+                if inp == idx:
+                    self.backfeed_indices[(idx,site)] = [edge[0] for edge in edges if edge[1]==idx]
+            node_type = param.get("type", "neural")
+            if node_type == "neural":
+                self.nodes.append(NeuralNode(
+                    param['x'], param['y'], 
+                    param.get('activation', ''),
+                    param.get('normalize', '')
+                ))
+            elif node_type == "self-attention":
+                self.nodes.append(DualNeuralNode(
+                    param.get('activation', 'scaled'),
+                    param.get('normalize', '')
+                ))
+            elif node_type == "delay":
+                raise NotImplementedError("Delay node not implemented yet")
+            else:
+                raise NotImplementedError(f"node type {node_type} not recognized")
             if param.get('output', False):
                 self.output_node = idx
             if param.get('input', False):
                 self.input_indices.append(idx)
-        self.edges = edges
+        
 
 
     def __str__(self):
@@ -491,3 +509,65 @@ class WeirdNetworkV2():
         with open(fname, 'wb') as f:
             p = Pickler(f)
             return p.dump(self)
+
+    def predict(self, input:np.array, debinarize=False):
+        '''Calculate this model's prediction for some input.
+        Inputs
+            input
+                the input vector. It must be of shape (features, samples).
+            debinarize
+                if set to True, return the output as a classifier integer
+                instead of a vector.
+        '''
+        outputs = {}
+        to_traverse = []
+        for idx in self.input_indices:
+            outputs[idx] = self.nodes[idx].feed({0:input})
+            to_traverse.extend(self.feed_indices[idx])
+        for idx, _ in to_traverse:
+            if idx not in outputs: #if node has not yet been fired
+                #find outputs this node wants as input
+                inputs = {site:[self.nodes[i].get_output() for i in self.backfeed_indices[(idx,site)]] 
+                            for site in range(self.nodes[idx].num_input_sites)}
+                if all(all([type(i)!=int for i in inps]) for inps in inputs.values()):
+                    # fire iff: all sites filled, all edges satisfied
+                    outputs[idx] = self.nodes[idx].feed(inputs)
+                    to_traverse.extend([fidx for fidx in self.feed_indices[idx] if fidx not in outputs])
+        if self.output_node in outputs:
+            if debinarize:
+                return outputs[self.output_node].argmax(axis=1)
+            return outputs[self.output_node]
+        raise Exception("Output node is not fed")
+
+    def backpropagate(self, exp_output:np.array):
+        '''Calculate weight & bias updates using gradient descent.
+        Inputs
+            input
+                vector on which to calculate error singal, shape (features, samples).
+            exp_output
+                vector to compare with model prediction, shape (binarized classes, samples).
+        '''
+        num_sample = exp_output.shape[0]
+        predicted_output = self.nodes[self.output_node].output
+        backfeed = {}
+        error_delta = self.cost_deriv(predicted_output, exp_output)
+        backfeed[self.output_node] = self.nodes[self.output_node].backfeed(error_delta)
+        to_traverse = self.backfeed_indices.get(self.output_node, []).copy()
+        for idx in to_traverse:
+            error_signal_components = [backfeed.get(oidx, (0,0,0)) for oidx in self.feed_indices[idx]]
+            de = sum([i[2] for i in error_signal_components]) #I think this actually requires a derivative of the synapse func
+            db, dw, de = self.nodes[idx].backfeed(de)
+            if idx not in backfeed:
+                backfeed[idx] = db, dw, de
+            else:
+                backfeed[idx][0]+=db
+                backfeed[idx][1]+=dw
+                backfeed[idx][2]+=de
+
+            for jdx in self.backfeed_indices[idx]:
+                if jdx not in to_traverse:
+                    to_traverse.append(jdx)
+
+        bup = {i:np.sum(b[0],0,keepdims=True)/num_sample for i,b in backfeed.items()}
+        wup = {i:w[1]/num_sample for i,w in backfeed.items()}
+        return bup, wup

@@ -11,6 +11,8 @@ setup(
     install_requires=[
         'matplotlib',
         'scipy',
+        'scikit-learn',
+        'tqdm',
         'requests',
         'pyqt5',
         'cupy' #TODO: create a way to install appropriate cupy from pre-built binaries

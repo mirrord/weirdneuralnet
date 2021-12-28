@@ -48,8 +48,10 @@ plt.show()
 ## install
 
 requirements:
-CUDA (see https://developer.nvidia.com/cuda-downloads)
-CuPy (see https://pypi.org/project/cupy/ for pre-built binaries)
+ * CUDA (see https://developer.nvidia.com/cuda-downloads)
+ * Visual C++ Build Tools (version 14.2): https://visualstudio.microsoft.com/downloads/
+    * direct link (will expire eventually): https://aka.ms/vs/17/release/vs_BuildTools.exe
+ * CuPy (see https://pypi.org/project/cupy/ for pre-built binaries)
 
 pull down this code, cd into the directory and run:
 ```pip install .```
