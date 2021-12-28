@@ -1,21 +1,33 @@
 # TODO
- * document existing code [REDO]
- * write up experimental procedure and results [DONE, more work needed as below]
+### Refactoring
+ * implement network traversal using input & output sites instead of just node indices (high priority)
+   * implement auto-regressive connections/training
+   * implement dual-input node with scaling
+ * parameterize priming with number of far points
+ * break up experiments & package into separate modules [DONE]
+
+### New Features
+ * implement more dataset usage (high priority)
+ * implement subset selection methods
+   * random pick [DONE]
+   * core subset
+   * LTS - maybe
+ * implement model structure "DNA" encoding
+ * impl transfer training
+ * impl network compilation [UNTESTED, INCOMPLETE] 
+   * ...actually, this may not be reasonable
+ * clean up CLI
+ * implement more initialization types
+
+### Experiments
+ * write up experimental procedure and results [DONE]
+   * more work needed as below
  * fix pretraining experiment functions [DONE]
  * re-run experiments using convergence target [UNTESTED]
     * create graphics for experimental accuracy results
- * impl network compilation [UNTESTED, INCOMPLETE]
- * implement more dataset usage
- * implement auto-regressive connections/training
- * implement dual-input node with scaling
- * parameterize priming with number of far points
     * compare to other subset selection methods
- * implement subset selection methods
-    * random pick [DONE]
-    * core subset
-    * LTS
- * break up experiments & package into separate modules
- * implement model structure "DNA" encoding
- * impl transfer training
- * clean up CLI
- * implement more initialization types
+
+### Documentation
+ * document existing code [REDO]
+ * document how to use WNN class
+ * document how to subclass Nodes
