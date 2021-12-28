@@ -147,6 +147,9 @@ class WeirdNetwork():
 
     def compile(self):
         '''Build a raw NN from this object to remove the OO overhead.'''
+        #as more functions are added to the WeirdNN, this function will need to either change entirely
+        # or even go away. It could be made to work with dual-site layers, but I'm skeptical that it will
+        # work with N-site layers.
         weights = []
         biases = []
         activations = []
@@ -198,7 +201,7 @@ class WeirdNetwork():
         '''Retrieve the last-calculated model output.'''
         return self.nodes[self.output_node].output
 
-    def backpropagate(self, input:np.array, exp_output:np.array):
+    def backpropagate(self, exp_output:np.array):
         '''Calculate weight & bias updates using gradient descent.
         Inputs
             input
@@ -206,8 +209,8 @@ class WeirdNetwork():
             exp_output
                 vector to compare with model prediction, shape (binarized classes, samples).
         '''
-        num_sample = input.shape[0]
-        predicted_output = self.predict(input)
+        num_sample = exp_output.shape[0]
+        predicted_output = self.nodes[self.output_node].output
         # print(f"output: {predicted_output.shape}")
         backfeed = {}
         error_delta = self.cost_deriv(predicted_output, exp_output)
@@ -240,17 +243,27 @@ class WeirdNetwork():
         '''Calculate cost for some input & expected output.'''
         return self.cost(self.predict(input),exp_out)
 
-    def train(self, input:np.array, exp_output:np.array, epochs:int, batch_size=-1):
+    def train(self,
+                input:np.array,
+                exp_output:np.array,
+                epochs:int,
+                convergence_target:float=1,
+                batch_size:int=-1):
         '''train the network on some set of inputs and expected outputs for some number of epochs.'''
+        #TODO: use test set to evaluate performance, not training set cost?
+        # research this better
         cost_history = []
         num_samples = len(exp_output)
         batch_size = num_samples if batch_size == -1 else batch_size
         for i in trange(epochs, desc="training..."):
             shuffle_in_unison(input, exp_output)
             cur_idx=0
+            accuracy = 0
             while cur_idx < num_samples:
                 end_idx = cur_idx+batch_size
-                bup, wup = self.backpropagate(input[cur_idx:end_idx], exp_output[cur_idx:end_idx])
+                predicted_output = self.predict(input[cur_idx:end_idx])
+                accuracy = np.where(np.equal(predicted_output, exp_output[cur_idx:end_idx].argmax(axis=1)))[0].shape[0] / batch_size
+                bup, wup = self.backpropagate(exp_output[cur_idx:end_idx])
                 #update
                 for idx, node in enumerate(self.nodes):
                     if idx in wup:
@@ -260,8 +273,11 @@ class WeirdNetwork():
                         node.update(self.learning_rate*bup[idx], update_weights)
                 cur_idx+=batch_size
             cost_history.append(self.cost(self.get_last_output(), exp_output[cur_idx-batch_size:end_idx])/batch_size)
+            if accuracy >= convergence_target:
+                break
 
         return cost_history
+        
 
 
 #TODO still need to test this
@@ -364,3 +380,114 @@ class CompiledNetwork():
         bup = {i:np.sum(b[0],0,keepdims=True)/num_sample for i,b in backfeed.items()}
         wup = {i:w[1]/num_sample for i,w in backfeed.items()}
         return bup, wup
+
+
+############################################################################################################
+### Network V2, under construction
+############################################################################################################
+
+class WeirdNetworkV2():
+    '''A gradient descent NN of arbitrary topology.
+    Methods
+    --------
+    load (classmethod)
+        load a network instance from a saved model file.
+    save
+        save a network to a file.
+    compile
+        compile this network into a raw network with less overhead.
+    predict
+        compute forward propagation on some input.
+    get_last_output
+        retrieve the last-calculated output of this network.
+    backpropagate
+        calculate weight & bias updates based on input & expected output.
+    evaluate
+        compute the error cost of the network's prediction on some input & expected output.
+    train
+        train the network on some set of inputs and expected outputs for some number of epochs.'''
+    def __init__(self,
+                node_params,
+                edges,
+                error_cost_func="diff_squares",
+                learning_rate=0.01,
+                regularize=(None, 0)):
+        '''Construct a WeirdNetwork NN.
+        Inputs
+            node_params
+                A list containing a dict for each node in the network. Each dict
+                must include at minimum: "x" (input dimension), "y" (output dimension),
+                and "activation". 
+            edges
+                a list of (int,int) tuples that describe the topology of the network
+                as a directed graph.
+            error_cost_func
+                a string label for the error cost function to be used.
+            learning_rate
+                the learning coefficient to be used during training.
+            regularize
+                a (str, int...) tuple that contains the string label for the
+                regularization function to be used during training and its parameters.
+        '''
+        # node_params should be a list of dicts of node parameters
+        # edges should be a list of node index tuples denoting connections between nodes
+        self.nodes = []
+        self.input_indices = []
+        self.feed_indices = {}
+        self.backfeed_indices = {}
+        self.output_node = 0
+        self.learning_rate = learning_rate
+        self.input, self.output = None, None
+        self.regularize_params, self.regularize = regularize, REGULARIZATIONS.get(regularize[0], noreg)(regularize[1])
+        self.cost, self.cost_deriv = COSTS.get(error_cost_func, (diff_squares, ddiff_squares))
+        for idx, param in enumerate(node_params):
+            self.feed_indices[idx] = [edge[1] for edge in edges if edge[0]==idx]
+            self.backfeed_indices[idx] = [edge[0] for edge in edges if edge[1]==idx]
+            #print(f"backfeed idxs {idx}: {self.backfeed_indices[idx]}")
+            self.nodes.append(Node(param['x'], param['y'], param['activation']))
+            if param.get('output', False):
+                self.output_node = idx
+            if param.get('input', False):
+                self.input_indices.append(idx)
+        self.edges = edges
+
+
+    def __str__(self):
+        return f"<WeirdNetwork size={len(self.nodes)} nodes>"
+
+    @classmethod
+    def load(cls, fname:str):
+        '''Load a WeirdNetwork model instance from a file.'''
+        with open(fname, 'rb') as f:
+            u = Unpickler(f)
+            model = u.load()
+        for node in model.nodes:
+            node.reload()
+        model.regularize = REGULARIZATIONS.get(model.regularize_params[0], noreg)(model.regularize_params[1])
+        return model
+
+    @classmethod
+    def create_from_config(cls, fname:Path):
+        with open(fname, 'r') as f:
+            config = json.load(f)
+        return cls.create_from_json(config)
+
+    @classmethod
+    def create_from_json(cls, json_config):
+        return cls(
+            json_config["node_params"],
+            json_config["edges"],
+            json_config.get("cost function", "diff_squares"),
+            json_config.get("learning rate", 0.01),
+            (json_config.get("regularization function", None),
+                json_config.get("regularization parameter", 0))
+        )
+
+    def save(self, fname:str):
+        '''Save a WeirdNetowrk model instance to a file.'''
+        self.regularize = None
+        for node in self.nodes:
+            node.clear_history()
+        with open(fname, 'wb') as f:
+            p = Pickler(f)
+            return p.dump(self)

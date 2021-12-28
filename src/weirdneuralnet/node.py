@@ -105,4 +105,16 @@ class Node():
         self.weight -= delta_weight
 
 
-    
+####################################
+### Node System V2: under construction
+####################################
+class BaseNode():
+    def __init__(self):
+        pass
+
+class NeuralNode(BaseNode):
+    def __init__(self):
+        pass
+
+class DualNeuralNode(NeuralNode):
+    pass
