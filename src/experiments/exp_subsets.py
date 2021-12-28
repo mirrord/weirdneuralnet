@@ -7,55 +7,45 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 
 def make_models(num_models, config, model_path=Path("./")):
-    #TODO: check to make sure directory exists, create it if it doesn't
+    model_path.mkdir(parents=True, exist_ok=True)
     for i in trange(num_models):
         m = WeirdNetwork.create_from_config(config)
         m.save(model_path / Path(f"models/model{i}.wm"))
 
-def baseline(config, samples, training_type="normal", prime_epochs=1, epochs=30):
-    #TODO: fix this lol
-    print(f"constructing baseline with training type \"{training_type}\"...")
-    results = []
+def pretrain_and_train(samples, pretraining_type="normal", clutser_type="kmeans", prime_epochs=1, epochs=30):
+    print(f"constructing baseline with training type \"{pretraining_type}/{clutser_type}\"...")
+    results = [0]*(epochs+1)
+    convergence_target = 0.9
     for i in trange(samples, desc="conducting experiments..."):
         X_train, Y_train, X_test, Y_test, X_val, Y_val = get_dataset('datasets')
-        #model = build_model(config)
         model = WeirdNetwork.load(f"models\\model{i}.wm")
-        epochs_done = 0
-        if training_type == "primeA":
-            new_X, new_Y = prime_typea(X_train, "kmeans", 10)
+        if pretraining_type == "primeA":
+            new_X, new_Y = prime_typea(X_train, clutser_type, 10)
             cost_history = model.train(new_X, new_Y, prime_epochs)
-            epochs_done = prime_epochs
-        elif training_type == "primeB":
-            new_X, new_Y = prime_typeb(X_train, "kmeans", 10)
+        elif pretraining_type == "primeB":
+            new_X, new_Y = prime_typeb(X_train, clutser_type, 10)
             cost_history = model.train(new_X, new_Y, prime_epochs)
-            epochs_done = prime_epochs
-        elif training_type == "primeC":
-            new_X, new_Y = prime_typec(X_train, Y_train, "kmeans", 10)
+        elif pretraining_type == "primeC":
+            new_X, new_Y = prime_typec(X_train, Y_train, clutser_type, 10)
             cost_history = model.train(new_X, new_Y, prime_epochs)
-            epochs_done = prime_epochs
         else:
             cost_history = []
-        cost_history.extend(model.train(X_train, Y_train, epochs-epochs_done))
-        plt.plot(list(range(epochs)), cost_history)
-        acc_train = get_accuracy(model, X_train, Y_train)
-        acc_test = get_accuracy(model, X_test, Y_test)
-        results.append(str((acc_train[0]/acc_train[1], acc_test[0]/acc_test[1])))
-
-    feed="\n\t".join(results)
-    with open(f"training_{training_type}_{epochs}epochs_{prime_epochs}prime.txt", "w") as f:
-        f.write(f"training vs. validation results: \n\t{feed}")
-    plt.title(f"{training_type} training progression")
-    plt.ylabel("cost")
-    plt.xlabel("epoch")
+        cost_history = model.train(X_train, Y_train, epochs, convergence_target)
+        results[len(cost_history)] += 1
+        plt.plot(list(range(len(cost_history))), cost_history)
+    plt.plot(list(range(epochs+1)), results)
+    plt.title(f"{pretraining_type}/{clutser_type} training time to convergence")
+    plt.ylabel("number of models")
+    plt.xlabel("epochs to converge")
     path = "C:\\Users\\19082\\Desktop\\dev projects\\python\\ai\\experiment records\\big experiment"
-    plt.savefig(f"{path}\\training_{training_type}_{epochs}epochs_{prime_epochs}prime.png")
+    plt.savefig(f"{path}\\training_{pretraining_type}_{clutser_type}_{prime_epochs}prime.png")
     plt.close()
 
-def pretraining_experiment(config, samples):
-    for train_type in ["primeC"]:
-        for epochs in [50, 100]:
-            if train_type != "normal":
-                for prime_ratio in [0.1, 0.20, 0.5]:
-                    baseline(config, samples, train_type, int(prime_ratio*epochs), epochs)
-            else:
-                baseline(config, samples, train_type, 1, epochs)
+def pretraining_experiment(samples):
+    for pretrain_type, train_type in [("normal", ''), ("primeB", ""), ("primeC", "")]:
+        if train_type != "normal":
+            for cluster_type in CLUSTER_FUNCS.keys():
+                for epochs in [10, 20, 50]:
+                    pretrain_and_train(samples, pretrain_type, cluster_type, epochs, 300)
+        else:
+            pretrain_and_train(samples, "normal", 1, 300)

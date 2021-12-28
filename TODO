@@ -1,7 +1,8 @@
 # TODO
  * document existing code [REDO]
  * write up experimental procedure and results [DONE, more work needed as below]
- * re-run experiments using convergence target
+ * fix pretraining experiment functions [DONE]
+ * re-run experiments using convergence target [UNTESTED]
     * create graphics for experimental accuracy results
  * impl network compilation [UNTESTED, INCOMPLETE]
  * implement more dataset usage
