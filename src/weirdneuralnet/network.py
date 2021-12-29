@@ -443,10 +443,10 @@ class WeirdNetworkV2():
         self.cost, self.cost_deriv = COSTS.get(error_cost_func, (diff_squares, ddiff_squares))
         self.edges = [edge if len(edge)==3 else (edge[0], edge[1], 0) for edge in edges]
         for idx, param in enumerate(node_params):
-            self.feed_indices[idx] = [(edge[1], edge[2]) for edge in edges if edge[0]==idx]
-            for outp, inp, site in edges:
+            self.feed_indices[idx] = [(edge[1], edge[2]) for edge in self.edges if edge[0]==idx]
+            for outp, inp, site in self.edges:
                 if inp == idx:
-                    self.backfeed_indices[(idx,site)] = [edge[0] for edge in edges if edge[1]==idx]
+                    self.backfeed_indices[(idx,site)] = [edge[0] for edge in self.edges if edge[1]==idx]
             node_type = param.get("type", "neural")
             if node_type == "neural":
                 self.nodes.append(NeuralNode(
@@ -510,6 +510,14 @@ class WeirdNetworkV2():
             p = Pickler(f)
             return p.dump(self)
 
+    def get_last_output(self):
+        '''Retrieve the last-calculated model output.'''
+        return self.nodes[self.output_node].output
+
+    def evaluate(self, input:np.array, exp_out:np.array):
+        '''Calculate cost for some input & expected output.'''
+        return self.cost(self.predict(input),exp_out)
+
     def predict(self, input:np.array, debinarize=False):
         '''Calculate this model's prediction for some input.
         Inputs
@@ -522,7 +530,7 @@ class WeirdNetworkV2():
         outputs = {}
         to_traverse = []
         for idx in self.input_indices:
-            outputs[idx] = self.nodes[idx].feed({0:input})
+            outputs[idx] = self.nodes[idx].feed({0:[input]})
             to_traverse.extend(self.feed_indices[idx])
         for idx, _ in to_traverse:
             if idx not in outputs: #if node has not yet been fired
@@ -571,3 +579,38 @@ class WeirdNetworkV2():
         bup = {i:np.sum(b[0],0,keepdims=True)/num_sample for i,b in backfeed.items()}
         wup = {i:w[1]/num_sample for i,w in backfeed.items()}
         return bup, wup
+
+    def train(self,
+                input:np.array,
+                exp_output:np.array,
+                epochs:int,
+                convergence_target:float=1,
+                batch_size:int=-1):
+        '''train the network on some set of inputs and expected outputs for some number of epochs.'''
+        #TODO: use test set to evaluate performance, not training set cost?
+        # research this better
+        cost_history = []
+        num_samples = len(exp_output)
+        batch_size = num_samples if batch_size == -1 else batch_size
+        for i in trange(epochs, desc="training..."):
+            shuffle_in_unison(input, exp_output)
+            cur_idx=0
+            accuracy = 0
+            while cur_idx < num_samples:
+                end_idx = cur_idx+batch_size
+                predicted_output = self.predict(input[cur_idx:end_idx])
+                accuracy = np.where(np.equal(debinarize(predicted_output), exp_output[cur_idx:end_idx].argmax(axis=1)))[0].shape[0] / batch_size
+                bup, wup = self.backpropagate(exp_output[cur_idx:end_idx])
+                #update
+                for idx, node in enumerate(self.nodes):
+                    if idx in wup:
+                        update_weights = self.learning_rate*wup[idx]
+                        if self.regularize_params[0] is not None:
+                            update_weights+=self.regularize(wup)
+                        node.update(self.learning_rate*bup[idx], update_weights)
+                cur_idx+=batch_size
+            cost_history.append(self.cost(self.get_last_output(), exp_output[cur_idx-batch_size:end_idx])/batch_size)
+            if accuracy >= convergence_target:
+                break
+
+        return cost_history

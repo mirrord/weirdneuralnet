@@ -139,10 +139,6 @@ class BaseNode():
         self.output = sum(self.inputs)
         self.fired = True
         return self.output
-    
-    def _filled(self):
-        '''returns True iff all input sites are filled'''
-        return all([any(self.inputs.values())])
 
     def _synapse(self, inputs):
         '''standard summation synapse function'''
@@ -150,9 +146,7 @@ class BaseNode():
 
     def feed(self, inputs:Dict):
         self.inputs = self._synapse(inputs)
-        if self._filled():
-            return self._fire()
-        raise NodeFeedException("Node cannot be fired due to missing input(s)")
+        return self._fire()
 
     #virtual
     def reload(self):
@@ -219,7 +213,7 @@ class NeuralNode(BaseNode):
             de_dz_forward - the next layers' error signal
         '''
         delta_bias = de_dz_foward * self.backtivate(self.z)
-        delta_weight = np.dot(self.input.T, delta_bias)
+        delta_weight = np.dot(self.inputs[0].T, delta_bias)
         return delta_bias, delta_weight, np.dot(delta_bias, self.weight.T) #last is de_dz for next layer down
 
     def update(self, delta_bias:np.array, delta_weight:np.array):

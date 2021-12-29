@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 #import numpy as np
 import cupy as np
 
-from .network import WeirdNetwork
+from .network import WeirdNetworkV2 as WeirdNetwork
 from .datasets import get_dataset, get_accuracy
 from experiments.exp_subsets import make_models, pretraining_experiment
 
