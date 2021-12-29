@@ -78,7 +78,6 @@ class Node():
             input = self.normalize(input)
         self.input = input
         self.z = np.dot(input, self.weight) + self.bias
-        #print(f"activation: {self.activate}")
         self.output = self.activate(self.z)
         #print(f"δ({self.weight.shape} . {input.shape} + {self.bias.shape}) = {self.output.shape}")
         # print(f"weight: {self.weight}\n")
@@ -137,7 +136,6 @@ class BaseNode():
     def _fire(self):
         '''calculates feed-foward output'''
         self.output = sum(self.inputs)
-        self.fired = True
         return self.output
 
     def _synapse(self, inputs):
