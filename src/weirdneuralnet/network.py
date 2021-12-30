@@ -560,7 +560,10 @@ class WeirdNetworkV2():
         backfeed = {}
         error_delta = self.cost_deriv(predicted_output, exp_output)
         backfeed[self.output_node] = self.nodes[self.output_node].backfeed(error_delta)
-        to_traverse = self.backfeed_indices.get(self.output_node, []).copy()
+        to_traverse = []
+        for site in range(self.nodes[self.output_node].num_input_sites):
+            to_traverse.extend(self.backfeed_indices.get(((self.output_node,site)), []).copy())
+
         for idx in to_traverse:
             error_signal_components = [backfeed.get(oidx, (0,0,0)) for oidx in self.feed_indices[idx]]
             de = sum([i[2] for i in error_signal_components]) #I think this actually requires a derivative of the synapse func
@@ -572,9 +575,10 @@ class WeirdNetworkV2():
                 backfeed[idx][1]+=dw
                 backfeed[idx][2]+=de
 
-            for jdx in self.backfeed_indices[idx]:
-                if jdx not in to_traverse:
-                    to_traverse.append(jdx)
+            for site in range(self.nodes[idx].num_input_sites):
+                for jdx in self.backfeed_indices.get((idx,site), []):
+                    if jdx not in to_traverse:
+                        to_traverse.append(jdx)
 
         bup = {i:np.sum(b[0],0,keepdims=True)/num_sample for i,b in backfeed.items()}
         wup = {i:w[1]/num_sample for i,w in backfeed.items()}
