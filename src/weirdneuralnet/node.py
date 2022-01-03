@@ -130,7 +130,7 @@ class BaseNode():
 
     def get_output(self):
         '''Retrieve the last-calculated output of this node, or 0 if never activated.'''
-        return 0 if self.output is None else self.output
+        return self.output
 
     #virtual
     def _fire(self):

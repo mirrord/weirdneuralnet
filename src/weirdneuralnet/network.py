@@ -535,10 +535,11 @@ class WeirdNetworkV2():
         for idx, _ in to_traverse:
             if idx not in outputs: #if node has not yet been fired
                 #find outputs this node wants as input
-                inputs = {site:[self.nodes[i].get_output() for i in self.backfeed_indices[(idx,site)]] 
+                inputs = {site:[self.nodes[i].get_output() for i in self.backfeed_indices[(idx,site)] if self.nodes[i].get_output() is not None] 
                             for site in range(self.nodes[idx].num_input_sites)}
-                if all(all([type(i)!=int for i in inps]) for inps in inputs.values()):
+                if all([len(inputs[site])==len(self.backfeed_indices[(idx,site)]) for site in range(self.nodes[idx].num_input_sites)]):
                     # fire iff: all sites filled, all edges satisfied
+                    #print(f"feeding node {idx} with input:\n{inputs}")
                     outputs[idx] = self.nodes[idx].feed(inputs)
                     to_traverse.extend([fidx for fidx in self.feed_indices[idx] if fidx not in outputs])
         if self.output_node in outputs:
@@ -565,7 +566,7 @@ class WeirdNetworkV2():
             to_traverse.extend(self.backfeed_indices.get(((self.output_node,site)), []).copy())
 
         for idx in to_traverse:
-            error_signal_components = [backfeed.get(oidx, (0,0,0)) for oidx in self.feed_indices[idx]]
+            error_signal_components = [backfeed.get(oidx, (0,0,0)) for oidx,_ in self.feed_indices[idx]]
             de = sum([i[2] for i in error_signal_components]) #I think this actually requires a derivative of the synapse func
             db, dw, de = self.nodes[idx].backfeed(de)
             if idx not in backfeed:
