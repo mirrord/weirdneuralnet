@@ -9,6 +9,7 @@ from weirdneuralnet.node_utils import *
 from weirdneuralnet.datasets import *
 
 class TestNodes(unittest.TestCase):
+    #TODO: move to testing against raw matmult
     def test_nodev2_feed(self):
         n1 = Node(10,10,"sigmoid")
         n2 = NeuralNode(10,10,"sigmoid")

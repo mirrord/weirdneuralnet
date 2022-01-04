@@ -1,9 +1,11 @@
 
 from setuptools import setup, find_packages
 
+__version__ = "0.0.3"
+
 setup(
     name="weirdneuralnet",
-    version="0.0.2",
+    version=__version__,
     author="Dane Howard",
     author_email="dane.a.howard@gmail.com",
     description="A small neural net experimentation framework",

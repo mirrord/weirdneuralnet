@@ -4,6 +4,7 @@ from weirdneuralnet.network import *
 
 
 class TestNodes(unittest.TestCase):
+    #TODO: move to checking against raw matmult
     def test_predictV2(self):
         node_params =[
                 {
