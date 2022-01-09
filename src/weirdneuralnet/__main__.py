@@ -1,5 +1,4 @@
 
-
 import argparse
 from tqdm import trange
 from pathlib import Path
@@ -9,7 +8,7 @@ import matplotlib.pyplot as plt
 #import numpy as np
 import cupy as np
 
-from .network import WeirdNetworkV2 as WeirdNetwork
+from .network import WeirdNetwork
 from .datasets import get_dataset, get_accuracy
 from experiments.exp_subsets import make_models, pretraining_experiment
 
@@ -18,9 +17,7 @@ def train(model, epochs, acc_threshold, graph_it):
     #fetch data
     X_train, Y_train, X_test, Y_test, X_val, Y_val = get_dataset('datasets')
 
-    print("train(): accuracy threshold not implemented yet")
-
-    cost_history = model.train(X_train, Y_train, epochs)
+    cost_history = model.train(X_train, Y_train, epochs, acc_threshold)
 
     correct, total = get_accuracy(model, X_test, Y_test)
     print(f"average test error: {model.evaluate(X_test, Y_test)/total}")

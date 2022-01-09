@@ -1,6 +1,6 @@
 
 
-from .node import DelayNode, DualNeuralNode, NeuralNode, Node
+from .node import DelayNode, DualNeuralNode, NeuralNode
 from .node_utils import *
 from .cluster import *
 #import numpy as np

@@ -42,8 +42,8 @@ def pretrain_and_train(samples, pretraining_type="normal", clutser_type="kmeans"
     plt.close()
 
 def pretraining_experiment(samples):
-    for pretrain_type, train_type in [("normal", ''), ("primeB", ""), ("primeC", "")]:
-        if train_type != "normal":
+    for pretrain_type in ["normal", "primeB", "primeC"]:
+        if pretrain_type != "normal":
             for cluster_type in CLUSTER_FUNCS.keys():
                 for epochs in [10, 20, 50]:
                     pretrain_and_train(samples, pretrain_type, cluster_type, epochs, 300)
