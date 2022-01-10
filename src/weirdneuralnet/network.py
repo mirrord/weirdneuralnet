@@ -296,25 +296,27 @@ class WeirdNetwork():
                 if set to True, return the output as a classifier integer
                 instead of a vector.
         '''
-        outputs = {}
+        fired = []
         to_traverse = []
         for idx in self.input_indices:
-            outputs[idx] = self.nodes[idx].feed({0:[input]})
+            self.nodes[idx].feed({0:[input]})
+            fired.append(idx)
             to_traverse.extend(self.feed_indices[idx])
         for idx, _ in to_traverse:
-            if idx not in outputs: #if node has not yet been fired
+            if idx not in fired: #if node has not yet been fired
                 #find outputs this node wants as input
                 inputs = {site:[self.nodes[i].get_output() for i in self.backfeed_indices[(idx,site)] if self.nodes[i].get_output() is not None] 
                             for site in range(self.nodes[idx].num_input_sites)}
                 if all([len(inputs[site])==len(self.backfeed_indices[(idx,site)]) for site in range(self.nodes[idx].num_input_sites)]):
                     # fire iff: all sites filled, all edges satisfied
                     #print(f"feeding node {idx} with input:\n{inputs}")
-                    outputs[idx] = self.nodes[idx].feed(inputs)
-                    to_traverse.extend([fidx for fidx in self.feed_indices[idx] if fidx not in outputs])
-        if self.output_node in outputs:
+                    self.nodes[idx].feed(inputs)
+                    fired.append(idx)
+                    to_traverse.extend([fidx for fidx in self.feed_indices[idx] if fidx not in fired])
+        if self.output_node in fired:
             if debinarize:
-                return outputs[self.output_node].argmax(axis=1)
-            return outputs[self.output_node]
+                return self.nodes[self.output_node].get_output().argmax(axis=1)
+            return self.nodes[self.output_node].get_output()
         raise Exception("Output node is not fed")
 
     def backpropagate(self, exp_output:np.array):
