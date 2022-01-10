@@ -48,4 +48,4 @@ def pretraining_experiment(samples):
                 for epochs in [10, 20, 50]:
                     pretrain_and_train(samples, pretrain_type, cluster_type, epochs, 300)
         else:
-            pretrain_and_train(samples, "normal", 1, 300)
+            pretrain_and_train(samples, "normal", "", 1, 300)

@@ -47,8 +47,8 @@ def experiment(config, epochs):
     pretraining_experiment(epochs)
     
 
-def play():
-    print("this space reserved for *really* weird experiments")
+def play(config):
+    make_models(100, config)
 
 
 
@@ -100,4 +100,4 @@ if __name__=="__main__":
             raise "I need to either --load a model or make a new one from a --config!"
         run(model, args.input)
     elif args.action == "play":
-        play()
+        play(args.config)

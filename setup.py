@@ -11,6 +11,7 @@ setup(
     description="A small neural net experimentation framework",
     url="https://github.com/mirrord/weirdneuralnet",
     install_requires=[
+        'wheel',
         'matplotlib',
         'scipy',
         'scikit-learn',
