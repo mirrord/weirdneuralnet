@@ -10,7 +10,7 @@ import cupy as np
 
 from .network import WeirdNetwork
 from .datasets import get_dataset, get_accuracy
-from experiments.exp_subsets import make_models, pretraining_experiment
+from experiments.exp_subsets import create_cached_models, make_models, pretraining_experiment
 
 
 def train(model, epochs, acc_threshold, graph_it):
@@ -48,7 +48,8 @@ def experiment(config, epochs):
     
 
 def play(config):
-    make_models(100, config)
+    create_cached_models(100)
+    #make_models(100, config)
 
 
 

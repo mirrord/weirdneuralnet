@@ -1,8 +1,8 @@
 # TODO
 ### Refactoring
- * implement network traversal using input & output sites instead of just node indices (high priority)
+ * implement network traversal using input & output sites instead of just node indices (high priority) [DONE]
    * implement auto-regressive connections/training
-   * implement dual-input node (with & without scaling)
+   * implement dual-input node (with & without scaling) [DONE]
  * parameterize priming with number of far points [UNTESTED]
  * break up experiments & package into separate modules [DONE]
 

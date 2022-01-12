@@ -25,7 +25,8 @@ def prime_typeb(X, cluster_type, num_classes, num_far_points=1):
     new_labels = np.zeros(num_classes*num_points_per_class)
     labels, new_data[:num_classes] = clust(X, num_classes)
     new_labels[:num_classes] = np.arange(num_classes)
-    new_labels[num_classes:] = np.arange(num_classes)
+    for i in range(num_far_points):
+        new_labels[num_classes*(i+1):num_classes*(i+2)] = np.arange(num_classes)
     #NOTE: I'm using "far" points for now to see how they do.
     # I suspect this will not be good enough.
     edge_idxs = get_far_points(new_data[:num_classes], X, labels, num_far_points)

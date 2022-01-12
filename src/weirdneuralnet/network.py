@@ -277,7 +277,10 @@ class WeirdNetwork():
             node.clear_history()
         with open(fname, 'wb') as f:
             p = Pickler(f)
-            return p.dump(self)
+            p.dump(self)
+        for node in self.nodes:
+            node.reload()
+        self.regularize = REGULARIZATIONS.get(self.regularize_params[0], noreg)(self.regularize_params[1])
 
     def get_last_output(self):
         '''Retrieve the last-calculated model output.'''
