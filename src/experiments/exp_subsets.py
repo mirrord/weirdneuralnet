@@ -56,7 +56,7 @@ def _pretraining_cache(far_points=1, nested_clusters=3):
                     "primeB2":lambda x: (prime_typeb(X_train, x, 10, (nested_clusters*(far_points+1))-1 ), (nested_clusters*(far_points+1))-1),
                     "primeC":lambda x: (prime_typec(X_train, Y_train, x, 10, nested_clusters, far_points), nested_clusters*far_points)}
     cache = {}
-    for cluster_type in CLUSTER_FUNCS.keys():
+    for cluster_type in ["kmeans"]: #CLUSTER_FUNCS.keys():
         for prime_type, pfunc in primer_funcs.items():
             subset, num_points = pfunc(cluster_type)
             cache[f"{prime_type}_{cluster_type}_{num_points}"] = subset
@@ -76,10 +76,11 @@ def get_cached_models():
     flist = [p for p in Path('cached_models').iterdir() if p.is_file()]
     for fname in flist:
         yield fname, WeirdNetwork.load(fname)
+    return
 
 def _add_stats(s):
     with open("stats.txt", 'a') as f:
-        f.write(json.dumps(s))
+        f.write(json.dumps(s)+"\n")
 
 def pretraining_exp_huge(samples):
     max_epochs = 2000
@@ -87,7 +88,7 @@ def pretraining_exp_huge(samples):
     X_train, Y_train, X_test, Y_test, X_val, Y_val = get_dataset('datasets')
     # for each model, create a profile of pretrained models to start from
     for fname, model in get_cached_models():
-        params = fname.split('_')
+        params = str(fname).split('_')
         stats = {
             "index": params[0][params[0].find('model')+5:],
             "pretrain epochs": params[1],
@@ -95,7 +96,7 @@ def pretraining_exp_huge(samples):
             "cluster type": params[3],
             "subset size": params[4][:params[4].find('.')]
         }
-        cost_history = model.train(X_train, Y_train, max_epochs, convergence_target)
+        cost_history = model.train(X_train, Y_train, max_epochs, convergence_target, 5000)
         stats['convergence time'] = len(cost_history)+1
         _add_stats(stats)
     return
