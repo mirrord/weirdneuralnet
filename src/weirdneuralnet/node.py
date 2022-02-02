@@ -30,6 +30,9 @@ class BaseNode():
         '''Retrieve the last-calculated output of this node, or 0 if never activated.'''
         return self.output
 
+    def does_update(self):
+        return True
+
     #virtual
     def _fire(self):
         '''calculates feed-foward output'''
@@ -50,7 +53,7 @@ class BaseNode():
 
     #virtual
     def backfeed(self, de_dz_foward:np.array):
-        return 0, 0, de_dz_foward
+        return 0, 0, [de_dz_foward]
 
     #virtual
     def update(self, delta_bias:np.array, delta_weight:np.array):
@@ -113,14 +116,14 @@ class NeuralNode(BaseNode):
         '''
         delta_bias = de_dz_foward * self.backtivate(self.z)
         delta_weight = np.dot(self.inputs[0].T, delta_bias)
-        return delta_bias, delta_weight, np.dot(delta_bias, self.weight.T) #last is de_dz for next layer down
+        return delta_bias, delta_weight, [np.dot(delta_bias, self.weight.T)] #last is de_dz for next layer down
 
     def update(self, delta_bias:np.array, delta_weight:np.array):
         '''Update the weights and biases by subtraction.'''
         self.bias -= delta_bias
         self.weight -= delta_weight
 
-class DualNeuralNode(BaseNode):
+class DualInputNode(BaseNode):
     def __init__(self,
                 activation:str,
                 normalize:str=''):
@@ -129,10 +132,8 @@ class DualNeuralNode(BaseNode):
             activation - string name of activation function to use
             normalize - string name of normalization function to use
         '''
-        #TODO: impl initialization strats
-        # currently using Xavier
         super().__init__(2)
-        self.activate, _ = ACTIVATIONS.get(activation, (no_activation, no_activation))
+        self.activate, self.backtivate = ACTIVATIONS.get(activation, (no_activation, no_activation))
         self.normalize_label, self.normalize = normalize, NORMALIZATIONS.get(normalize, nonorm)
         self.activation_label = activation
         self._shape = None
@@ -141,6 +142,8 @@ class DualNeuralNode(BaseNode):
         self._shape = dims
     def shape(self):
         return self._shape
+    def does_update(self):
+        return False
 
     def reload(self):
         '''Re-establish function pointers from stored function names.'''
@@ -156,12 +159,12 @@ class DualNeuralNode(BaseNode):
     def _fire(self):
         '''Calculate the foward activation with some input.
         Inputs:
-            input - the input matrix, which must be of shape (num features, num samples)
+            input - the input matrices, which must be of shape (num features, num samples)
         '''
         if self.normalize_label:
             self.inputs[0] = self.normalize(self.inputs[0])
             self.inputs[1] = self.normalize(self.inputs[1])
-        self.z = np.dot(self.inputs[0], self.inputs[1].T)
+        self.z = self.inputs[0] * self.inputs[1]
         self.output = self.activate(self.z)
         return self.output
 
@@ -170,8 +173,12 @@ class DualNeuralNode(BaseNode):
         Inputs:
             de_dz_forward - the next layers' error signal
         '''
-        #TODO: I'm not certain how this should be calculated, if at all
-        return 0, 0, de_dz_foward #last is de_dz for next layer down
+        db = de_dz_foward * self.backtivate(self.z)
+        de_dz = [
+            db * self.inputs[1],
+            db * self.inputs[0],
+        ]
+        return 0, 0, de_dz
 
 class DelayNode(BaseNode):
     def __init__(self, dims=None):
@@ -188,6 +195,8 @@ class DelayNode(BaseNode):
     def set_dims(self, dims):
         if self.output == None:
             self.output = np.zeros(dims)
+    def does_update(self):
+        return False
 
     def clear_history(self):
         super().clear_history()
@@ -199,4 +208,7 @@ class DelayNode(BaseNode):
             self.output = np.zeros(self.inputs[0].shape)
         self.next_output = self.inputs[0]
         return self.output
+
+    def backfeed(self, de_dz_foward:np.array):
+        return 0, 0, [0]
         

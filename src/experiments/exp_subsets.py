@@ -82,6 +82,17 @@ def _add_stats(s):
     with open("stats.txt", 'a') as f:
         f.write(json.dumps(s)+"\n")
 
+def training_average(samples):
+    max_epochs = 2000
+    convergence_target = 0.9
+    total_conv = 0
+    X_train, Y_train, X_test, Y_test, X_val, Y_val = get_dataset('datasets')
+    for model_idx in trange(samples, desc="creating models..."):
+        model = WeirdNetwork.load(f"models\\model{model_idx}.wm")
+        cost_history = model.train(X_train, Y_train, max_epochs, convergence_target, 5000)
+        total_conv+=len(cost_history)
+    print(f"average epochs to convergence: {total_conv/100}")
+
 def pretraining_exp_huge(samples):
     max_epochs = 2000
     convergence_target = 0.9

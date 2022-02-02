@@ -53,11 +53,24 @@ def dswish(x):
     return swishx+(sigx*(1-swishx))
 
 def scale_act(x):
-    return x/len(x)
+    return x/x.shape[1]
+def dscale(x):
+    return 1/x.shape[1]
+
+def norm(x):
+    return x/np.max(x,axis=1,keepdims=True)
+def dnorm(x):
+    return 1/np.max(x,axis=1,keepdims=True)
+
+def l2norm(x):
+    return x/np.linalg.norm(x,axis=1,keepdims=True)
+def dl2norm(x):
+    return 1/np.linalg.norm(x,axis=1,keepdims=True)
 
 def no_activation(x):
     return x
 
+#TODO: wrap these and log a warning when label is not found
 ACTIVATIONS ={
     "sigmoid": (sigmoid, dsigmoid),
     "relu": (relu, drelu),
@@ -65,7 +78,9 @@ ACTIVATIONS ={
     "tanh": (tanh, dtanh),
     "softmax": (softmax, dsoftmax),
     "swish": (swish, dswish),
-    "scaled": (scale_act, no_activation)
+    "scale": (scale_act, dscale),
+    "norm": (norm, dnorm),
+    "l2norm": (l2norm, dl2norm),
 }
 
 ## cost functions

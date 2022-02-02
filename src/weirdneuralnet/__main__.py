@@ -10,14 +10,14 @@ import cupy as np
 
 from .network import WeirdNetwork
 from .datasets import get_dataset, get_accuracy
-from experiments.exp_subsets import create_cached_models, make_models, pretraining_exp_huge, pretraining_experiment
+from experiments.exp_subsets import create_cached_models, make_models, pretraining_exp_huge, pretraining_experiment, training_average
 
 
 def train(model, epochs, acc_threshold, graph_it):
     #fetch data
     X_train, Y_train, X_test, Y_test, X_val, Y_val = get_dataset('datasets')
 
-    cost_history = model.train(X_train, Y_train, epochs, acc_threshold)
+    cost_history = model.train(X_train, Y_train, epochs, acc_threshold, 1000)
 
     correct, total = get_accuracy(model, X_test, Y_test)
     print(f"average test error: {model.evaluate(X_test, Y_test)/total}")
@@ -45,7 +45,7 @@ def run(model, inp_fname):
 
 def experiment(config, epochs):
     #pretraining_experiment(epochs)
-    pretraining_exp_huge(epochs)
+    training_average(epochs)
     
 
 def play(config):

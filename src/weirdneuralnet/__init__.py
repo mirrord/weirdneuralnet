@@ -1,3 +1,3 @@
 
 from .network import WeirdNetwork
-from .node import NeuralNode, DualNeuralNode
+from .node import NeuralNode, DualInputNode

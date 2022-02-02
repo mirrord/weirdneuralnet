@@ -1,6 +1,6 @@
 
 
-from .node import DelayNode, DualNeuralNode, NeuralNode
+from .node import DelayNode, DualInputNode, NeuralNode
 from .node_utils import *
 from .cluster import *
 #import numpy as np
@@ -179,7 +179,7 @@ class WeirdNetwork():
             self.feed_indices[idx] = [(edge[1], edge[2]) for edge in self.edges if edge[0]==idx]
             for outp, inp, site in self.edges:
                 if inp == idx:
-                    self.backfeed_indices[(idx,site)] = [edge[0] for edge in self.edges if edge[1]==idx]
+                    self.backfeed_indices[(idx,site)] = [edge[0] for edge in self.edges if edge[1]==idx and edge[2]==site]
             node_type = param.get("type", "neural")
             if node_type == "neural":
                 self.nodes.append(NeuralNode(
@@ -187,8 +187,8 @@ class WeirdNetwork():
                     param.get('activation', ''),
                     param.get('normalize', '')
                 ))
-            elif node_type == "self-attention":
-                self.nodes.append(DualNeuralNode(
+            elif node_type == "dual-input":
+                self.nodes.append(DualInputNode(
                     param.get('activation', 'scaled'),
                     param.get('normalize', '')
                 ))
@@ -302,6 +302,7 @@ class WeirdNetwork():
         fired = []
         to_traverse = []
         for idx in self.input_indices:
+            #print(f"feeding input node {idx}")
             self.nodes[idx].feed({0:[input]})
             fired.append(idx)
             to_traverse.extend(self.feed_indices[idx])
@@ -326,13 +327,13 @@ class WeirdNetwork():
         '''Calculate weight & bias updates using gradient descent.
         Inputs
             input
-                vector on which to calculate error singal, shape (features, samples).
+                vector on which to calculate error signal, shape (features, samples).
             exp_output
                 vector to compare with model prediction, shape (binarized classes, samples).
         '''
         num_sample = exp_output.shape[0]
         predicted_output = self.nodes[self.output_node].output
-        backfeed = {}
+        backfeed = {}# node index: (db, dw, [ error signals by input site ])
         error_delta = self.cost_deriv(predicted_output, exp_output)
         backfeed[self.output_node] = self.nodes[self.output_node].backfeed(error_delta)
         to_traverse = []
@@ -340,23 +341,18 @@ class WeirdNetwork():
             to_traverse.extend(self.backfeed_indices.get(((self.output_node,site)), []).copy())
 
         for idx in to_traverse:
-            error_signal_components = [backfeed.get(oidx, (0,0,0)) for oidx,_ in self.feed_indices[idx]]
-            de = sum([i[2] for i in error_signal_components]) #I think this actually requires a derivative of the synapse func
+            error_signal_components = [backfeed.get(oidx, (0,0,[0]*(site+1)))[2][site] for oidx,site in self.feed_indices[idx]]
+            de = sum([i for i in error_signal_components])
             db, dw, de = self.nodes[idx].backfeed(de)
-            if idx not in backfeed:
-                backfeed[idx] = db, dw, de
-            else:
-                backfeed[idx][0]+=db
-                backfeed[idx][1]+=dw
-                backfeed[idx][2]+=de
+            backfeed[idx] = db, dw, de
 
             for site in range(self.nodes[idx].num_input_sites):
                 for jdx in self.backfeed_indices.get((idx,site), []):
                     if jdx not in to_traverse:
                         to_traverse.append(jdx)
 
-        bup = {i:np.sum(b[0],0,keepdims=True)/num_sample for i,b in backfeed.items()}
-        wup = {i:w[1]/num_sample for i,w in backfeed.items()}
+        bup = {i:np.sum(b[0],0,keepdims=True)/num_sample for i,b in backfeed.items() if self.nodes[i].does_update()}
+        wup = {i:w[1]/num_sample for i,w in backfeed.items() if self.nodes[i].does_update()}
         return bup, wup
 
     def train(self,
