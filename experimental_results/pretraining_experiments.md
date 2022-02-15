@@ -14,8 +14,8 @@ All pretraining methods were evaluated with between 0 and 180 epochs of pretrain
 
 ## Results
 While some small improvement was noted for method (3), methods (1) and (2) showed negligible benefit. When compared to random subset training, even the method (3) improvements were shown to be insufficient for any real-world application. 
-![reference test: random subset pretraining](experimental_results/random_subset_avg_50.png?raw=true)
-![experimental method results](experimental_results\averages.png?raw=true)
+![reference test: random subset pretraining](random_subset_avg_50.png?raw=true)
+![experimental method results](averages.png?raw=true)
 
 
 ## Next steps
