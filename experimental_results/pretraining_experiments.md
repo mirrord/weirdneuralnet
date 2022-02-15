@@ -16,8 +16,9 @@ All pretraining methods were evaluated with between 0 and 180 epochs of pretrain
 While some small improvement was noted for method (3), methods (1) and (2) showed negligible benefit. When compared to random subset training, even the method (3) improvements were shown to be insufficient for any real-world application. 
 ![reference test: random subset pretraining](random_subset_avg_50.png?raw=true)
 ![experimental method results](averages.png?raw=true)
-
+blue line = method 1
+orange line = method 2
+green line = method 3
 
 ## Next steps
-Training method (2) was originally intended as a baseline comparison. However, this was a poor choice for several reasons. A much better comparison will be found using random subset selection using the same number of datapoints as dictated by (3) and (4).
-The above experiment was somewhat naive in construction, as a more meaningful result would be mean number of epochs to find some convergence target. I will therefore re-run the experiments above with this goal and update this document with the results.
+In my next experiment, I plan to research known subset selection techniques and evaluate modifications to those techniques instead of inventing my own like a dunce.
