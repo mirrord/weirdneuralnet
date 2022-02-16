@@ -4,6 +4,8 @@ import hashlib, requests, gzip
 #import numpy as np
 import cupy as np
 from numpy import frombuffer, setdiff1d
+from pathlib import Path
+import pickle
 
 from .node_utils import binarize
 
@@ -49,3 +51,21 @@ def get_dataset(path):
     
     Y_train, Y_val, Y_test = binarize(Y_train, 10), binarize(Y_val, 10), binarize(Y_test, 10)
     return X_train, Y_train, X_test, Y_test, X_val, Y_val
+
+def get_cifar(cifar_num=10, datasets_path=(Path(__file__).parent.parent.parent / 'datasets')):
+    cifar_path = datasets_path / Path(f"cifar-{cifar_num}-batches-py")
+    train_files = [f"data_batch_{i}" for i in range(1,6)]
+    X = []
+    Y = []
+    for tfname in train_files:
+        with open(cifar_path / tfname, 'rb') as f:
+            m_data = pickle.load(f, encoding='bytes')
+            X.extend(m_data[b'data'])
+            Y.extend(m_data[b'labels'])
+    X = np.array(X)
+    Y = np.array(Y)
+    with open(cifar_path / 'test_batch', 'rb') as f:
+        m_data = pickle.load(f, encoding='bytes')
+        X_test = np.array(m_data[b'data'])
+        Y_test = np.array(m_data[b'labels'])
+    return X, binarize(cifar_num, Y), X_test, binarize(cifar_num, Y_test)

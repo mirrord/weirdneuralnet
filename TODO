@@ -23,7 +23,7 @@
  * write up experimental procedure and results [DONE]
    * more work needed: images and more experiments
  * fix pretraining experiment functions [DONE]
- * re-run experiments using convergence target [UNTESTED]
+ * re-run experiments using convergence target
     * create graphics for experimental accuracy results
     * compare to other subset selection methods
 
