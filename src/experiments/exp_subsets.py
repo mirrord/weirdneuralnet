@@ -111,3 +111,39 @@ def pretraining_exp_huge(samples):
         stats['convergence time'] = len(cost_history)+1
         _add_stats(stats)
     return
+
+def random_subset_exp(num_models, samples_per_class):
+    max_epochs = 2000
+    convergence_target = 0.9
+    X_train, Y_train, X_test, Y_test, X_val, Y_val = get_dataset('datasets')
+    Y_debin = debinarize(Y_train)
+    results = {}
+    x_l = [prepochs*20 for prepochs in range(10)]
+    for model_idx in trange(num_models, desc="examining model..."):
+        results[model_idx] = []
+        for prepochs in range(10):
+            model = WeirdNetwork.load(f"models\\model{model_idx}.wm")
+            for step in trange(prepochs*20, desc="performing random subset pretraining..."):
+                rand_idxs = random_equal_selection(Y_debin, 10, samples_per_class)
+                model.train(X_train[rand_idxs], Y_train[rand_idxs], 1, display_progress_bar=False)
+            cost_history = model.train(X_train, Y_train, max_epochs, convergence_target, 5000)
+            results[model_idx].append(len(cost_history)+1)
+    print("finished training, plotting...")
+    for idx, y_l in results.items():
+        plt.plot(x_l, y_l)
+    plt.xlabel("pretraining epochs")
+    plt.ylabel("epochs to converge")
+    plt.title(f"pretraining effect on time to convergence")
+    plt.savefig(f"random_subset_large.png")
+    plt.close()
+
+    averages = [
+        sum([r[idx] for r in results.values()])/len(x_l)
+        for idx in range(len(x_l))
+    ]
+    plt.plot(x_l, averages)
+    plt.xlabel("pretraining epochs")
+    plt.ylabel("avg epochs to converge")
+    plt.title(f"pretraining({samples_per_class*10}) effect on avg time to convergence")
+    plt.savefig(f"random_subset_avg_{samples_per_class*10}.png")
+    plt.close()
