@@ -225,10 +225,14 @@ class DelayNode(BaseNode):
         self._next_output = None
 
     def _fire(self):
-        self.output = self.next_output
-        if self.next_output == None:
+        if self.input[0].shape[1] > 1:
+            # batch
             self.output = np.zeros(self.inputs[0].shape)
-        self.next_output = self.inputs[0]
+            self.output[1:] = self.inputs[0][:-1]
+        else:
+            # single
+            self.output = self.next_output
+            self.next_output = self.inputs[0]
         return self.output
 
     def backfeed(self, de_dz_foward: np.array):
