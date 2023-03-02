@@ -3,13 +3,13 @@
 WeirdNeuralNet is a neural network library for exploring new topologies and training paradigms. It runs on any CUDA-enabled GPU.
 
 ## CLI
-train a new Weird Network from scratch on the command line:
+train a new Weird Network from scratch on the command line and save the result:
 ```
 C:/users/JohnCleese> python -m weirdneuralnet --config network.cfg --train --epochs 100 --graph --save my_model.wnn
 ```
 ![example training cost plot](blob/Figure_1.jpg?raw=true)
 
-At some point in the future, you'll then be able to load your saved model and train it more, fine-tune it, modify it, examine it, and/or use it on some input data of your choosing!
+#### TODO: add examples of loading & fine-tuning
 
 ## library interface
 Create your own Weird Network in your project:
