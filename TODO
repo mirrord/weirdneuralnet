@@ -1,13 +1,12 @@
 # TODO
 ### Refactoring
- * implement network traversal using input & output sites instead of just node indices (high priority) [DONE]
-   * implement auto-regressive connections/training
-   * implement dual-input node (with & without scaling) [DONE]
  * parameterize priming with number of far points [UNTESTED]
- * break up experiments & package into separate modules [DONE]
  * add in type hints
  * review for speedups
  * add more unit tests
+ * reorganize speed tests for better reproduceability
+ * add numpy fallback for cupy operations
+ * Cython-ize code for speed
 
 ### New Features
  * implement more dataset usage (high priority)
@@ -21,6 +20,15 @@
    * ...actually, this may not be reasonable
  * clean up CLI
  * implement more initialization types
+
+### New Network Features
+ * implement convolutions
+   * implement max/min/avg-pooling
+ * implement batch normalization
+ * implement auto-regressive connections/training
+ * feature parity with Transformer
+   * self-attention
+   * 
 
 ### Experiments
  * write up experimental procedure and results [DONE]
