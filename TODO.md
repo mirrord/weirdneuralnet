@@ -28,7 +28,15 @@
  * implement auto-regressive connections/training
  * feature parity with Transformer
    * self-attention
-   * 
+   * vector append
+ * feature parity with diffusion models
+   * diffusion operation (gaussian noise chain)
+ * transfer learning QOL functions
+ * autoencoder QOL functions
+ * reinforcement learning
+ * unsupervised learning
+ * recurrence
+  * unrolled backprop  
 
 ### Experiments
  * write up experimental procedure and results [DONE]
