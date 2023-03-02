@@ -5,6 +5,9 @@
    * implement dual-input node (with & without scaling) [DONE]
  * parameterize priming with number of far points [UNTESTED]
  * break up experiments & package into separate modules [DONE]
+ * add in type hints
+ * review for speedups
+ * add more unit tests
 
 ### New Features
  * implement more dataset usage (high priority)
