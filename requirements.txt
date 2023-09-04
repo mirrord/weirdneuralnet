@@ -1,0 +1,7 @@
+wheel
+matplotlib
+scipy
+scikit-learn
+tqdm
+requests
+pyqt5

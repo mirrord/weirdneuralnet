@@ -15,7 +15,8 @@ def kmeans(vec, num_clusters):
 # see: https://scikit-learn.org/stable/auto_examples/cluster/plot_agglomerative_clustering_metrics.html#sphx-glr-auto-examples-cluster-plot-agglomerative-clustering-metrics-py
 def agglom(vec, num_clusters, link_type):
     # for linkage in ("ward", "average", "complete", "single"):
-    agglo = cluster.AgglomerativeClustering(linkage=link_type, n_clusters=num_clusters)
+    agglo = cluster.AgglomerativeClustering(
+        linkage=link_type, n_clusters=num_clusters)
     v = vec.get()
     y_predict = agglo.fit_predict(v)
     clf = NearestCentroid()
@@ -39,11 +40,11 @@ def centroids(X, labels, num_classes):
     return centroids
 
 
-def calc_distances(X):
-    distances = np.empty(X.shape)
-    for i in range(X.shape[0]):
-        distances[i, :] = np.abs(np.broadcast_to(X[i, :], X.shape) - X).sum(axis=1)
-    return distances
+# def calc_distances(X):
+#     distances = np.empty(X.shape)
+#     for i in range(X.shape[0]):
+#         distances[i, :] = np.abs(np.broadcast_to(X[i, :], X.shape) - X).sum(axis=1)
+#     return distances
 
 
 def calc_distances(p0, points):
@@ -51,7 +52,7 @@ def calc_distances(p0, points):
 
 
 def get_furthest(p0, points, num_get):
-    return np.argpartition(calc_distances(p0, points), 1)[-1 * num_get :].astype(int)
+    return np.argpartition(calc_distances(p0, points), 1)[-1 * num_get:].astype(int)
 
 
 # TODO: impl a better ways to get edge points
@@ -59,7 +60,7 @@ def get_far_points(centroids, point_set, point_labels, num_far=1):
     edge_points = np.zeros(len(centroids) * num_far)
     for idx, centroid in enumerate(centroids):
         print(f"index: {idx}")
-        edge_points[idx : idx + num_far] = get_furthest(
+        edge_points[idx: idx + num_far] = get_furthest(
             centroid, point_set[point_labels == idx], num_far
         )
     return edge_points.astype(int)

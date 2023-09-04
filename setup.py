@@ -3,6 +3,13 @@ from setuptools import setup, find_packages
 
 __version__ = "0.0.5"
 
+with open("requirements.txt", 'r') as f:
+    requirements = f.readlines()    
+
+# 'cupy' #TODO: create a way to install appropriate cupy from pre-built binaries
+# just adding 'cupy' to reqs will build CuPy from source which takes FOREVER
+# TODO: default back to numpy if cupy can't be installed
+
 setup(
     name="weirdneuralnet",
     version=__version__,
@@ -10,17 +17,7 @@ setup(
     author_email="dane.a.howard@gmail.com",
     description="A small neural net experimentation framework",
     url="https://github.com/mirrord/weirdneuralnet",
-    install_requires=[
-        'wheel',
-        'matplotlib',
-        'scipy',
-        'scikit-learn',
-        'tqdm',
-        'requests',
-        'pyqt5',
-        'cupy' #TODO: create a way to install appropriate cupy from pre-built binaries
-                #this will build CuPy from source which takes FOREVER
-    ],
+    install_requires=requirements,
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",

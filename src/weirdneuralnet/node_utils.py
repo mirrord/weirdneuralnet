@@ -1,7 +1,7 @@
 # import numpy as np
 import cupy as np
 
-## activation functions
+# #### activation functions
 # from scipy.special import expit as sigmoid
 sigmoid = np.ElementwiseKernel(
     "float64 x", "float64 y", "y = 1 / (1 + exp(-x))", "expit"
@@ -102,7 +102,7 @@ ACTIVATIONS = {
     "l2norm": (l2norm, dl2norm),
 }
 
-## cost functions
+# #### cost functions
 def diff_squares(y, y_true):
     # print(f"diff squares of: {y.shape} - {y_true.shape}")
     return np.sum(np.square(y - y_true)).item()
@@ -147,7 +147,7 @@ COSTS = {
     "cross-entropy": (cross_entropy, dcross_entropy),
     "hellinger": (hellinger, dhellinger),
 }
-## regularization functions
+# #### regularization functions
 def ridge_reg(lamb):
     return lambda w: lamb * np.sum(np.abs(w)).item()
 
@@ -163,7 +163,7 @@ def elastic_reg(alpha):
     return lambda w: L1(w) + L2(w)
 
 
-def noreg(l):
+def noreg(_):
     return lambda w: 0
 
 
@@ -176,10 +176,10 @@ REGULARIZATIONS = {
 }
 
 
-## synapse functions
-##  probably won't touch these
+# #### synapse functions
+# #  probably won't touch these
 
-## normalization & standardization functions
+# # normalization & standardization functions
 def minmax_normalize(x):
     min = np.min(x).item()
     return (x - min) / (np.max(x).item() - min)
@@ -206,7 +206,7 @@ NORMALIZATIONS = {
 }
 
 
-## reference functions
+# #### reference functions
 def classic_net_predict(weights, biases, input):
     for b, w in zip(biases, weights):
         input = sigmoid(np.dot(input, w) + b)

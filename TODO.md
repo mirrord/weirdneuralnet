@@ -36,15 +36,15 @@
  * reinforcement learning
  * unsupervised learning
  * recurrence
-  * unrolled backprop  
+   * unrolled backprop
 
 ### Experiments
  * write up experimental procedure and results [DONE]
    * more work needed: images and more experiments
  * fix pretraining experiment functions [DONE]
  * re-run experiments using convergence target
-    * create graphics for experimental accuracy results
-    * compare to other subset selection methods
+   * create graphics for experimental accuracy results
+   * compare to other subset selection methods
 
 ### Documentation
  * document existing code [REDO]

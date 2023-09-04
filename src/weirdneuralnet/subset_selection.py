@@ -1,11 +1,11 @@
 from .node_utils import binarize, debinarize
-from .cluster import *
+from .cluster import CLUSTER_FUNCS, get_far_points
 import cupy as np
 
 # subset selection functions return subset indices
 # subset construction functions return (points, labels)
 
-############## Construction functions ##############
+# ############# Construction functions ##############
 # NOTE: prime type A is here for posterity. It sucks big time!
 def prime_typea(X, cluster_type, num_classes):
     # priming A: pretrain with blind clusters
@@ -26,7 +26,7 @@ def prime_typeb(X, cluster_type, num_classes, num_far_points=1):
     labels, new_data[:num_classes] = clust(X, num_classes)
     new_labels[:num_classes] = np.arange(num_classes)
     for i in range(num_far_points):
-        new_labels[num_classes * (i + 1) : num_classes * (i + 2)] = np.arange(
+        new_labels[num_classes * (i + 1): num_classes * (i + 2)] = np.arange(
             num_classes
         )
     # NOTE: I'm using "far" points for now to see how they do.
@@ -53,12 +53,12 @@ def prime_typec(
         next_idx = idx + num_points_per_class
         class_samples = X[labels == i]
         nested_labels, nested_centroids = clust(class_samples, nested_clusters)
-        new_data[idx : idx + nested_clusters] = nested_centroids
+        new_data[idx: idx + nested_clusters] = nested_centroids
         # and get outliers in those representative samples
         edge_idxs = get_far_points(
             nested_centroids, class_samples, nested_labels, num_far_points
         )
-        new_data[idx + nested_clusters : next_idx] = class_samples[edge_idxs]
+        new_data[idx + nested_clusters: next_idx] = class_samples[edge_idxs]
         new_labels[idx:next_idx] = i
     bin_labels = binarize(new_labels, num_classes)
     return new_data, bin_labels
@@ -66,7 +66,7 @@ def prime_typec(
 
 ###########################
 
-############# Selection Functions ##############
+# ############ Selection Functions ##############
 def random_equal_selection(labels, num_classes, samples_per_class):
     """randomly select a certain number of items in each class."""
     # labels should be debinarized
@@ -76,6 +76,6 @@ def random_equal_selection(labels, num_classes, samples_per_class):
         class_samples = np.nonzero(labels == i)[0]
         np.random.shuffle(class_samples)
         sample_idxs[
-            i * samples_per_class : (i + 1) * samples_per_class
+            i * samples_per_class: (i + 1) * samples_per_class
         ] = class_samples[:samples_per_class]
     return sample_idxs

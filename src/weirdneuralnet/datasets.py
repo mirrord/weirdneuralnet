@@ -1,5 +1,7 @@
 import os
-import hashlib, requests, gzip
+import hashlib
+import requests
+import gzip
 
 # import numpy as np
 import cupy as np

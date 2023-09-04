@@ -1,6 +1,6 @@
 from .node import DelayNode, DualInputNode, NeuralNode
-from .node_utils import *
-from .cluster import *
+import node_utils
+import cluster
 
 # import numpy as np
 import cupy as np
@@ -31,11 +31,11 @@ class CompiledNetwork:
         self.edges = edges
         self.activation_lables = activations
         self.activations = [
-            ACTIVATIONS.get(act, (sigmoid, dsigmoid)) for act in activations
+            node_utils.ACTIVATIONS.get(act, (node_utils.sigmoid, node_utils.dsigmoid)) for act in activations
         ]
         self.normalization_params = normalizations
         self.normalizations = [
-            NORMALIZATIONS.get(norm, nonorm) for norm in normalizations
+            node_utils.NORMALIZATIONS.get(norm, node_utils.nonorm) for norm in normalizations
         ]
         self.inputs = {}
         self.outputs = {}
@@ -47,7 +47,8 @@ class CompiledNetwork:
             [edge[0] for edge in edges if edge[1] == idx] for idx in range(len(weights))
         ]
         self.input_nodes = input_idxs
-        self.output_node = output_idx if output_idx != -1 else len(self.nodes) - 1
+        self.output_node = output_idx if output_idx != - \
+            1 else len(self.nodes) - 1
 
     # TODO: implement compiled training
 
@@ -63,7 +64,8 @@ class CompiledNetwork:
             self.inputs[idx] = input
             if self.normalize_label:
                 self.inputs[idx] = self.normalize(input)
-            self.zs[idx] = np.dot(self.inputs[idx], self.weights[idx]) + self.bias[idx]
+            self.zs[idx] = np.dot(
+                self.inputs[idx], self.weights[idx]) + self.bias[idx]
             self.outputs[idx] = self.activations[idx][0](self.zs[idx])
             to_traverse.extend(self.feed_indices[idx])
         for idx in to_traverse:
@@ -77,7 +79,8 @@ class CompiledNetwork:
                 if self.normalize_label:
                     self.inputs[idx] = self.normalize(self.inputs[idx])
                 self.zs[idx] = (
-                    np.dot(self.inputs[idx], self.weights[idx]) + self.bias[idx]
+                    np.dot(self.inputs[idx],
+                           self.weights[idx]) + self.bias[idx]
                 )
                 self.outputs[idx] = self.activations[idx][0](self.zs[idx])
                 to_traverse.extend(
@@ -91,7 +94,7 @@ class CompiledNetwork:
         self,
         input,
         expout,
-        derror_func=ddiff_squares,
+        derror_func=node_utils.ddiff_squares,
     ):
         """Calculate weight & bias updates using gradient descent.
         Inputs
@@ -141,7 +144,7 @@ class CompiledNetwork:
 
 
 ############################################################################################################
-### Network V2, under construction
+# Network V2, under construction
 ############################################################################################################
 
 
@@ -203,11 +206,11 @@ class WeirdNetwork:
         self._stepwise_training = False
         self.learning_rate = learning_rate
         self.input, self.output = None, None
-        self.regularize_params, self.regularize = regularize, REGULARIZATIONS.get(
-            regularize[0], noreg
+        self.regularize_params, self.regularize = regularize, node_utils.REGULARIZATIONS.get(
+            regularize[0], node_utils.noreg
         )(regularize[1])
-        self.cost, self.cost_deriv = COSTS.get(
-            error_cost_func, (diff_squares, ddiff_squares)
+        self.cost, self.cost_deriv = node_utils.COSTS.get(
+            error_cost_func, (node_utils.diff_squares, node_utils.ddiff_squares)
         )
         self.edges = [
             edge if len(edge) == 3 else (edge[0], edge[1], 0) for edge in edges
@@ -236,14 +239,16 @@ class WeirdNetwork:
             elif node_type == "dual-input":
                 self.nodes.append(
                     DualInputNode(
-                        param.get("activation", "scaled"), param.get("normalize", "")
+                        param.get("activation", "scaled"), param.get(
+                            "normalize", "")
                     )
                 )
             elif node_type == "delay":
                 self.nodes.append(DelayNode())
                 self._stepwise_training = True
             else:
-                raise NotImplementedError(f"node type {node_type} not recognized")
+                raise NotImplementedError(
+                    f"node type {node_type} not recognized")
             if param.get("output", False):
                 self.output_node = idx
             if param.get("input", False):
@@ -253,10 +258,10 @@ class WeirdNetwork:
         input_dim = None
         for i in range(self.input_indices):
             shp = self.nodes[i].shape()
-            if shp != None:
+            if shp is not None:
                 input_dim = shp[0]
                 break
-        if input_dim == None:
+        if input_dim is None:
             raise Exception("No suitable input node!")
         input_vec = np.ones((1, input_dim))
         outputs = {}
@@ -266,10 +271,10 @@ class WeirdNetwork:
             try:
                 outputs[idx] = self.nodes[idx].feed({0: [input_vec]})
                 dims[idx] = (input_vec.shape[1], outputs[idx].shape[1])
-                if self.nodes[idx].shape() == None:
+                if self.nodes[idx].shape() is None:
                     self.nodes[idx].set_dims(dims[idx])
-            except:  # TODO: what is the matmult exception?
-                raise Exception(f"input node ID {idx} has a problem!")
+            except ValueError as e:  # TODO: what is the matmult exception?
+                raise ValueError(f"input node ID {idx} has a problem! {str(e)}")
             to_traverse.extend(self.feed_indices[idx])
         for idx, _ in to_traverse:
             if idx not in outputs:  # if node has not yet been fired
@@ -284,7 +289,8 @@ class WeirdNetwork:
                 }
                 if all(
                     [
-                        len(inputs[site]) == len(self.backfeed_indices[(idx, site)])
+                        len(inputs[site]) == len(
+                            self.backfeed_indices[(idx, site)])
                         for site in range(self.nodes[idx].num_input_sites)
                     ]
                 ):
@@ -292,7 +298,8 @@ class WeirdNetwork:
                     # print(f"feeding node {idx} with input:\n{inputs}")
                     outputs[idx] = self.nodes[idx].feed(inputs)
                     to_traverse.extend(
-                        [fidx for fidx in self.feed_indices[idx] if fidx not in outputs]
+                        [fidx for fidx in self.feed_indices[idx]
+                            if fidx not in outputs]
                     )
         if self.output_node in outputs:
             return True
@@ -309,7 +316,7 @@ class WeirdNetwork:
             model = u.load()
         for node in model.nodes:
             node.reload()
-        model.regularize = REGULARIZATIONS.get(model.regularize_params[0], noreg)(
+        model.regularize = node_utils.REGULARIZATIONS.get(model.regularize_params[0], node_utils.noreg)(
             model.regularize_params[1]
         )
         return model
@@ -343,7 +350,7 @@ class WeirdNetwork:
             p.dump(self)
         for node in self.nodes:
             node.reload()
-        self.regularize = REGULARIZATIONS.get(self.regularize_params[0], noreg)(
+        self.regularize = node_utils.REGULARIZATIONS.get(self.regularize_params[0], node_utils.noreg)(
             self.regularize_params[1]
         )
 
@@ -384,7 +391,8 @@ class WeirdNetwork:
                 }
                 if all(
                     [
-                        len(inputs[site]) == len(self.backfeed_indices[(idx, site)])
+                        len(inputs[site]) == len(
+                            self.backfeed_indices[(idx, site)])
                         for site in range(self.nodes[idx].num_input_sites)
                     ]
                 ):
@@ -413,11 +421,13 @@ class WeirdNetwork:
         predicted_output = self.nodes[self.output_node].output
         backfeed = {}  # node index: (db, dw, [ error signals by input site ])
         error_delta = self.cost_deriv(predicted_output, exp_output)
-        backfeed[self.output_node] = self.nodes[self.output_node].backfeed(error_delta)
+        backfeed[self.output_node] = self.nodes[self.output_node].backfeed(
+            error_delta)
         to_traverse = []
         for site in range(self.nodes[self.output_node].num_input_sites):
             to_traverse.extend(
-                self.backfeed_indices.get(((self.output_node, site)), []).copy()
+                self.backfeed_indices.get(
+                    ((self.output_node, site)), []).copy()
             )
 
         for idx in to_traverse:
@@ -458,14 +468,14 @@ class WeirdNetwork:
         """train the network on some set of inputs and expected outputs for some number of epochs."""
         # TODO: use test set to evaluate performance, not training set cost?
         # research this better
-        mrange = lambda t: trange(t, desc="training...")
+        def mrange(t): 
+            return trange(t, desc="training...")
         mrange = mrange if display_progress_bar else range
-        predict = lambda x: self.predict
         cost_history = []
         num_samples = len(exp_output)
         batch_size = num_samples if batch_size == -1 else batch_size
         for i in mrange(epochs):
-            shuffle_in_unison(input, exp_output)
+            node_utils.shuffle_in_unison(input, exp_output)
             cur_idx = 0
             accuracy = 0
             while cur_idx < num_samples:
@@ -474,11 +484,10 @@ class WeirdNetwork:
                 accuracy = (
                     np.where(
                         np.equal(
-                            debinarize(predicted_output),
+                            node_utils.debinarize(predicted_output),
                             exp_output[cur_idx:end_idx].argmax(axis=1),
                         )
-                    )[0].shape[0]
-                    / batch_size
+                    )[0].shape[0] / batch_size
                 )
                 bup, wup = self.backpropagate(exp_output[cur_idx:end_idx])
                 # update
@@ -487,13 +496,14 @@ class WeirdNetwork:
                         update_weights = self.learning_rate * wup[idx]
                         if self.regularize_params[0] is not None:
                             update_weights += self.regularize(wup)
-                        node.update(self.learning_rate * bup[idx], update_weights)
+                        node.update(self.learning_rate *
+                                    bup[idx], update_weights)
                 cur_idx += batch_size
             cost_history.append(
                 self.cost(
-                    self.get_last_output(), exp_output[cur_idx - batch_size : end_idx]
-                )
-                / batch_size
+                    self.get_last_output(
+                    ), exp_output[cur_idx - batch_size: end_idx]
+                ) / batch_size
             )
             if accuracy >= convergence_target:
                 break

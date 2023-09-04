@@ -237,3 +237,58 @@ class DelayNode(BaseNode):
 
     def backfeed(self, de_dz_foward: np.array):
         return 0, 0, [0]
+
+
+class Convolution2DNode(BaseNode):
+    def __init__(self, kernel_dims):
+        super().__init__(1)
+        self._filter = np.randn(*kernel_dims) / kernel_dims[0]*kernel_dims[1]
+
+    def __str__(self):
+        return f"ConvolutionNode with kernel ({self._filter.shape})"
+
+    def _fire(self):
+        """calculates feed-foward output"""
+        filter_height, filter_width = self._filter.shape
+        height, width = self.inputs[0]
+        for i in range(height-(filter_height-1)):
+            for j in range(width-(filter_width-1)):
+                # how do you batch this???
+        return self.output
+
+    # taken from
+    def _getWindows(self, input, output_size, kernel_size, padding=0, stride=1, dilate=0):
+        working_input = input
+        working_pad = padding
+        # dilate the input if necessary
+        if dilate != 0:
+            working_input = np.insert(
+                working_input, range(1, input.shape[2]), 0, axis=2)
+            working_input = np.insert(
+                working_input, range(1, input.shape[3]), 0, axis=3)
+
+        # pad the input if necessary
+        if working_pad != 0:
+            working_input = np.pad(working_input, pad_width=(
+                (0,), (0,), (working_pad,), (working_pad,)), mode='constant', constant_values=(0.,))
+
+        in_b, in_c, out_h, out_w = output_size
+        out_b, out_c, _, _ = input.shape
+        batch_str, channel_str, kern_h_str, kern_w_str = working_input.strides
+
+        return np.lib.stride_tricks.as_strided(
+            working_input,
+            (out_b, out_c, out_h, out_w, kernel_size, kernel_size),
+            (batch_str, channel_str, stride * kern_h_str,
+             stride * kern_w_str, kern_h_str, kern_w_str)
+        )
+
+    def reload(self):
+        return
+
+    def backfeed(self, de_dz_foward: np.array):
+        return 0, 0, [de_dz_foward]
+
+    def update(self, delta_bias: np.array, delta_weight: np.array):
+        """Update the weights and biases by subtraction."""
+        return
