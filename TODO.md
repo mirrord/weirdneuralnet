@@ -1,6 +1,9 @@
 # TODO
 ### Refactoring
  * parameterize priming with number of far points [UNTESTED]
+ * test & trial infrastructures (high priority)
+ * change timing tests to use perf_counter
+ * generalize time trial code
  * add in type hints
  * review for speedups
  * add more unit tests
